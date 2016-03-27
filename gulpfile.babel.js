@@ -133,7 +133,7 @@ gulp.task('scripts', () =>
 gulp.task('inject:head', () =>
   gulp.src('src/_includes/head.html')
     .pipe($.inject(gulp.src('.tmp/assets/stylesheets/*.css',
-                            {read: false}), {ignorePath: '.tmp'}))
+                            {read: false}), {ignorePath: '.tmp', addRootSlash: false}))
     .pipe(gulp.dest('src/_includes'))
 );
 
@@ -265,3 +265,5 @@ gulp.task('rebuild', gulp.series('clean:dist', 'clean:assets',
 
 // 'gulp check' -- checks your Jekyll configuration for errors and lint your JS
 gulp.task('check', gulp.series('jekyll:doctor', 'lint'));
+
+// run butoh build and
