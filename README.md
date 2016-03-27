@@ -1,30 +1,26 @@
 # vidaaudrey-blog
 
-> Audrey Li&#39;s personal blog
+> Audrey Li's personal blog
 
 ## To get started
 
 ```sh
-$ gulp [--prod]
+$ npm start // will run gulp 
 ```
-
-And you'll have a new Jekyll site generated for you and displayed in your
-browser. Neato. If you want to run it with production settings, just add
-`--prod`.
 
 ## Usage
 
 ```sh
-$ gulp build [--prod]
+npm run publish // will run the build and push to gh-pages
 ```
-
+```
+$ gulp build [--prod]
 ```sh
 $ gulp deploy
 ```
 
-## Github
-For more information on how to use your new project, please refer to the [README
-on Github](https://github.com/sondr3/generator-jekyllized).
+## Links
+[About Jekyllized](https://github.com/sondr3/generator-jekyllized).
 
 ## Owner
 
