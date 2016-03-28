@@ -2,18 +2,18 @@
 
 
 ## Learn 
-[] Scala 
-[] React Universal 
-[] Cassandra
-[] JavaScript Design Pattern
-[] Angular2
-[] Microservice
-[] Dockr
-[] Closure
-[] React Native, and sharing code 
-[] Machine Learning 
-[] Algorithm and Data Structure Course 
-[] 
+[ ] Scala 
+[ ] React Universal 
+[ ] Cassandra
+[ ] JavaScript Design Pattern
+[ ] Angular2
+[ ] Microservice
+[ ] Dockr
+[ ] Closure
+[ ] React Native, and sharing code 
+[ ] Machine Learning 
+[ ] Algorithm and Data Structure Course 
+[ ] 
 
 ## TODO
 
