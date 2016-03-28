@@ -2,9 +2,9 @@
 
 
 ## Learn 
-[ ] Scala 
-[ ] React Universal 
-[ ] Cassandra
+- [ ] Scala 
+- [ ] React Universal 
+- [] Cassandra
 [ ] JavaScript Design Pattern
 [ ] Angular2
 [ ] Microservice
