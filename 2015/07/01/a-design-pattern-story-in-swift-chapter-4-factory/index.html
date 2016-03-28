@@ -1,0 +1,360 @@
+<!DOCTYPE html><html xmlns=http://www.w3.org/1999/xhtml xml:lang=en lang=en-us><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><title>A Design Pattern Story in Swift &#8211; Chapter 4: Factory</title><meta name=description content="We all have our special weapons. And we fight for what we believed in."><link rel=canonical href=http://audreyli.me/2015/07/01/a-design-pattern-story-in-swift-chapter-4-factory/ ><link rel=stylesheet href=/assets/stylesheets/style-90cc5d106a.min.css><link rel="shortcut icon" href=/assets/favicon.ico><link rel=apple-touch-icon sizes=57x57 href=/assets/images/favicons/apple-touch-icon-57x57.png><link rel=apple-touch-icon sizes=60x60 href=/assets/images/favicons/apple-touch-icon-60x60.png><link rel=apple-touch-icon sizes=72x72 href=/assets/images/favicons/apple-touch-icon-72x72.png><link rel=apple-touch-icon sizes=76x76 href=/assets/images/favicons/apple-touch-icon-76x76.png><link rel=apple-touch-icon sizes=114x114 href=/assets/images/favicons/apple-touch-icon-114x114.png><link rel=apple-touch-icon sizes=120x120 href=/assets/images/favicons/apple-touch-icon-120x120.png><link rel=apple-touch-icon sizes=144x144 href=/assets/images/favicons/apple-touch-icon-144x144.png><link rel=apple-touch-icon sizes=152x152 href=/assets/images/favicons/apple-touch-icon-152x152.png><link rel=apple-touch-icon sizes=180x180 href=/assets/images/favicons/apple-touch-icon-180x180.png><link rel=icon type=image/png href=/assets/images/favicons/favicon-32x32.png sizes=32x32><link rel=stylesheet href=https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/css/bootstrap.css><link rel=stylesheet href=https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css><link type=application/atom+xml rel=alternate href=http://audreyli.me/feed.xml title=vidaaudrey-blog></head><body><header class=site-header><div class=wrapper><a class=site-title href=/ >vidaaudrey-blog</a><nav class=site-nav><a href=# class=menu-icon><svg viewBox="0 0 18 15"><path fill=#424242 d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/><path fill=#424242 d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/><path fill=#424242 d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/></svg></a><div class=trigger><a class=page-link href=/about/ >About</a> <a class=page-link href=/ >Home</a></div></nav></div></header><div class=page-content><div class=wrapper><article class=post itemscope itemtype=http://schema.org/BlogPosting><header class=post-header><h1 class=post-title itemprop="name headline">A Design Pattern Story in Swift &#8211; Chapter 4: Factory</h1><p class=post-meta><time datetime=2015-07-01T00:00:00-07:00 itemprop=datePublished>Jul 1, 2015</time> • <span itemprop=author itemscope itemtype=http://schema.org/Person><span itemprop=name>Audrey</span></span></p></header><div class=post-content itemprop=articleBody><p><span>We all have our special weapons. And we fight for what we believed in.</span></p><figure class=highlight><pre><code class=language-swift data-lang=swift>enum PersonType{
+    case God
+    case Knight
+    case Wizard
+    case Dwarf
+    case Poet
+}
+
+protocol Personable {
+    var personType: PersonType { get }
+    var name: String { get }
+    var weapon: Weapon? { get set}
+}
+
+class Person: Personable, CustomStringConvertible {
+    var personType: PersonType
+    var name: String
+    var weapon: Weapon?
+    var description: String {
+        return name + (weapon == nil ? &quot; - no weapon \n&quot; : &quot; - Weapon: \(weapon!.name) (price: \(weapon!.price)#) \n&quot;)
+    }
+    
+    init(personType: PersonType,name: String, weapon: Weapon?){
+        self.name = name
+        self.personType = personType
+        self.weapon = weapon
+    }
+}
+//: HouseOfWeapon is a new family that has rised since the first war in the seven kindom. They are the only place where people can get their weapons.
+protocol Weapon {
+    var name: String { get }
+    var price: Int { get set }
+    func fight()
+}
+
+struct Sword: Weapon {
+    var name: String
+    var price: Int
+    func fight() {
+        print(&quot;fight with sword&quot;)
+    }
+}
+struct Pen: Weapon {
+    var name: String
+    var price: Int
+    func fight() {
+        print(&quot;fight with pen&quot;)
+    }
+}
+struct Magic: Weapon {
+    var name: String
+    var price: Int
+    func fight() {
+        print(&quot;fight with magic&quot;)
+    }
+}
+struct Hammer: Weapon {
+    var name: String
+    var price: Int
+    func fight() {
+        print(&quot;fight with hammer&quot;)
+    }
+}
+
+//: In the beginning, people would randomly drop at the HouseOfWeapon and ask for their weapon of choice. The choices sometimes turn out to be terribly wrong and people would come back to demand for exchanges. There is no system
+
+//: LordOfWeapon is the head of HouseOfWeapon and he has the knowledge of what kind of weapon should be create for what kind of person.
+class LordOfWeapon {
+    class func weaponMatch(person: Person) -&gt; Weapon {
+        switch person.personType {
+        case .Dwarf: return Hammer(name: &quot;Hammer&quot;, price: 10)
+        case .God, .Wizard: return Magic(name: &quot;Magic&quot;, price: 20)
+        case .Knight: return Sword(name: &quot;Sword&quot;, price: 15)
+        case .Poet: return Pen(name: &quot;Pen&quot;, price: 25)
+        }
+    }
+}
+
+//: create a group of people
+let knight = Person(personType: PersonType.Knight, name: &quot;Knight William&quot;, weapon: nil)
+let dwarf = Person(personType: PersonType.Dwarf, name: &quot;Dwarf Jim&quot;, weapon: nil)
+let poet = Person(personType: PersonType.Poet, name: &quot;Poet Shelly&quot;, weapon: nil)
+let god = Person(personType: PersonType.God, name: &quot;God of Music&quot;, weapon: nil)
+var group:[Person] = [knight, dwarf, poet, god]
+
+print(&quot;----------People Group Created---------&quot;)
+print(group.map{$0.description})
+
+group = group.map({ (var p) -&gt; Person in
+    p.weapon = LordOfWeapon.weaponMatch(p)
+    return p
+})
+print(&quot;----------Weapon Added---------&quot;)
+print(group.map{$0.description})
+
+//:## Now, the new LordOfCoin want to reset the price of the weapons
+
+class LordOfCoin {
+    class func adjustWeaponPrice( person: Person) -&gt; Int  {
+        guard person.weapon != nil else { return 0 }
+        switch person.personType {
+        case .Dwarf: return 1
+        case .God,; .Wizard: return  50
+        case; .Knight: return 5
+        case; .Poet: return  -20
+        }
+    }
+}
+
+print(&quot;\n----------LordOfCoin adjusted the price of weapons ---------&quot;)
+group = group.map({ (var p) -&gt; Person in
+    p.weapon?.price += LordOfCoin.adjustWeaponPrice(p)
+    return p
+})
+print(group.map{$0.description})
+
+
+//: The problem is that both LordOfCoin and LordOfWeapon are doing the same kind of checking for person&#39;s type. Can they outsource this work to someone else? Perhaps a RuleBook? Say a universalWeaponMatch rule
+func universalWeaponMatch(var person: Personable) -&gt; Personable {
+    if person.weapon == nil {
+        var weapon: Weapon
+        switch person.personType {
+        case .Dwarf: weapon =  Hammer(name: &quot;Hammer&quot;, price: 10)
+        case .God, .Wizard: weapon = Magic(name: &quot;Magic&quot;, price: 20)
+        case .Knight: weapon = Sword(name: &quot;Sword&quot;, price: 15)
+        case .Poet: weapon = Pen(name: &quot;Pen&quot;, price: 25)
+            
+        }
+        person.weapon = weapon
+    }
+    return person
+}
+
+//: The LordOfWeapon refers the &#39;universalWeaponMatch&#39; to create the right weapon for each person
+class LordOfWeaponAdvanced {
+    class func weaponMatch(person: Personable) -&gt; Weapon? {
+        return universalWeaponMatch(person).weapon
+    }
+}
+
+//: CoinOfWeapon refers the &#39;universalWeaponMatch&#39; to check and adjust the weapon price.
+class LordOfCoinAdvanced {
+    class func getWeaponPrice(person: Personable) -&gt; Int? {
+        return universalWeaponMatch(person).weapon?.price
+    }
+    class func adjustWeaponPrice(var person: Personable) -&gt; Personable {
+        //: equip the person with weapon
+        person = universalWeaponMatch(person)
+        guard person.weapon != nil else { return person }
+        // Fav Poet and give them free weapons
+        if person.weapon!.price &gt; 0 &amp;&amp; person.personType == .Poet {
+            print(&quot;Through the &#39;universalWeaponMatch&#39; book, LordOfCoinAdvanced adjusted the weapon price for \(person.name) from \(person.weapon!.price)# to 0# &quot;)
+            person.weapon!.price = 0
+        }
+        return person
+    }
+}
+
+print(&quot;\n---------- &#39;universalWeaponMatch&#39; book is created ---------&quot;)
+LordOfCoinAdvanced.adjustWeaponPrice(group[2])
+print(group[2] )</code></pre></figure><p><a href=/assets/images/wp-content/uploads/2015/07/factory-1.png><img class="aligncenter size-full wp-image-981" src=/assets/images/wp-content/uploads/2015/07/factory-1.png alt="factory 1" width=797 height=355></a></p><p>Rework on the code, add weapon factories and let them decide the weapon details.</p><figure class=highlight><pre><code class=language-swift data-lang=swift>enum PersonType{
+    case God
+    case Knight
+    case Wizard
+    case Dwarf
+    case Poet
+}
+
+enum WeaponType {
+    case Sword
+    case Magic
+    case Pen
+    case Hammer
+}
+
+
+//: We all have our special weapons. And we fight for what we believed in.
+protocol Personable {
+    var personType: PersonType { get }
+    var name: String { get }
+    var weapon: Weapon? { get set}
+    var skillLevel: Int { get set}
+}
+
+class Person: Personable, CustomStringConvertible {
+    var personType: PersonType
+    var name: String
+    var weapon: Weapon?
+    var skillLevel: Int
+    var description: String {
+        return name + (weapon == nil ? &quot; - no weapon \n&quot; : &quot; - Weapon: \(weapon!.name) (price: \(weapon!.price)#) \n&quot;)
+    }
+    init(personType: PersonType,name: String, weapon: Weapon?, skillLevel: Int  = 0){
+        self.name = name
+        self.personType = personType
+        self.weapon = weapon
+        self.skillLevel = skillLevel
+    }
+}
+
+
+protocol Weapon {
+    var name: String { get }
+    var price: Int { get set }
+    var powerLevel: Int { get }
+    
+    func fight()
+}
+struct Sword: Weapon {
+    var name: String
+    var price: Int
+    var powerLevel: Int
+    func fight() {
+        print(&quot;fight with sword&quot;)
+    }
+}
+struct Pen: Weapon {
+    var name: String
+    var price: Int
+    var powerLevel: Int
+    func fight() {
+        print(&quot;fight with pen&quot;)
+    }
+}
+struct Magic: Weapon {
+    var name: String
+    var price: Int
+    var powerLevel: Int
+    func fight() {
+        print(&quot;fight with magic&quot;)
+    }
+}
+struct Hammer: Weapon {
+    var name: String
+    var price: Int
+    var powerLevel: Int
+    func fight() {
+        print(&quot;fight with hammer&quot;)
+    }
+}
+
+
+//: Previously the &quot;universalWeaponMatch&quot; takes over the responsibility for creating the matching weapon for each person. But as the amount of weapon grows, the matching book exploded and became hard to manage.
+//: In general, the HouseOfWeapon makes 3 kinds weapons:
+//: * WeaponFromTheSouth: good for entry level, flexbile
+//: * WeaponFromTheNorth: requires heavy mastery, very powerful
+//: * WeaponFromTheVast: a mix of materials from everywhere, can be very weak or very powerful. Hard to expect the result
+
+protocol WeaponFactory {
+    func makeAWeapon(weaponType: WeaponType) -&gt; Weapon
+}
+
+class WeaponFactoryFromTheNorth:WeaponFactory {
+     func makeAWeapon(weaponType: WeaponType) -&gt; Weapon {
+        switch weaponType {
+        case .Hammer: return Hammer(name: &quot;Hammer from North&quot;, price: 100, powerLevel: 90)
+        case .Magic: return Magic(name: &quot;Magic from North&quot;, price: 100, powerLevel: 80)
+        case .Pen: return Pen(name: &quot;Pen from North&quot;, price: 90, powerLevel: 99)
+        case .Sword: return Sword(name: &quot;Sword from North&quot;, price: 70, powerLevel: 65)
+        }
+    }
+}
+
+class WeaponFactoryFromTheSouth:WeaponFactory {
+    func makeAWeapon(weaponType: WeaponType) -&gt; Weapon {
+        switch weaponType {
+        case .Hammer: return Hammer(name: &quot;Hammer from South&quot;, price: 100, powerLevel: 1)
+        case .Magic: return Magic(name: &quot;Magic from South&quot;, price: 10, powerLevel: 18)
+        case .Pen: return Pen(name: &quot;Pen from South&quot;, price: 9, powerLevel: 9)
+        case .Sword: return Sword(name: &quot;Sword from South&quot;, price: 7, powerLevel: 5)
+        }
+    }
+}
+class WeaponFactoryFromTheVast:WeaponFactory {
+    func makeAWeapon(weaponType: WeaponType) -&gt; Weapon {
+        switch weaponType {
+        case .Hammer: return Hammer(name: &quot;Hammer from Vast&quot;, price: 80, powerLevel: 99)
+        case .Magic: return Magic(name: &quot;Magic from Vast&quot;, price: 30, powerLevel: 1)
+        case .Pen: return Pen(name: &quot;Pen from Vast&quot;, price: 9, powerLevel: 67)
+        case .Sword: return Sword(name: &quot;Sword from Vast&quot;, price: 78, powerLevel: 2)
+        }
+    }
+}
+
+//: the &#39;universalWeaponMatchAdvanced&#39; checks the person&#39;s skill level first and send the order to one of the three Weapon Factories to make the weapon. It doesn&#39;t need to care about the details of each weapon (price, name...). It&#39;s not their business anyway.
+func universalWeaponMatchAdvaned(var person: Personable) -&gt; Personable {
+    var weaponFactory: WeaponFactory
+    switch person.skillLevel {
+        case 0...20: weaponFactory = WeaponFactoryFromTheSouth()
+        case; 21...100: weaponFactory = WeaponFactoryFromTheNorth();
+        default: weaponFactory = WeaponFactoryFromTheVast()
+    }
+    
+    if person.weapon == nil {
+        var weapon: Weapon
+        switch person.personType {
+        case .Dwarf: weapon =  weaponFactory.makeAWeapon(WeaponType.Hammer)
+        case .God,; .Wizard: weapon = weaponFactory.makeAWeapon(WeaponType.Magic)
+        case; .Knight: weapon = weaponFactory.makeAWeapon(WeaponType.Sword)
+        case; .Poet: weapon = weaponFactory.makeAWeapon(WeaponType.Pen)
+        }
+        person.weapon = weapon
+    }
+    return person
+}
+
+class LordOfWeapon {
+    class func weaponMatch(person: Personable) -&gt; Weapon? {
+        return universalWeaponMatchAdvaned(person).weapon
+    }
+}
+
+//: Testing
+print(&quot;----------Created a group of people ---------&quot;)
+let knight = Person(personType: PersonType.Knight, name: &quot;Knight William&quot;, weapon: nil, skillLevel: 56)
+let dwarf = Person(personType: PersonType.Dwarf, name: &quot;Dwarf Jim&quot;, weapon: nil, skillLevel: 99)
+let poet = Person(personType: PersonType.Poet, name: &quot;Poet Shelly&quot;, weapon: nil, skillLevel: 142)
+let god = Person(personType: PersonType.God, name: &quot;God of Music&quot;, weapon: nil, skillLevel: 1)
+var group:[Person] = [knight, dwarf, poet, god]
+
+print(group.map{$0.description})
+print(&quot;----------Add Weapon to each person according to their skill level ---------&quot;)
+group.map{LordOfWeapon.weaponMatch($0)}
+print(group.map{$0.description})
+
+
+//:## Now, the new LordOfCoin want to reset the price of the weapons. He is also responsible for calculating the tax for each person&#39;s weapon
+
+class LordOfCoin {
+    class func calculateWeaponCostAfterTax(person: Personable) -&gt; Int {
+        if person.weapon == nil { return 0 }
+        else { return universalWeaponMatchAdvaned(person).weapon!.price * 2 }
+    }
+    class func adjustWeaponPrice( person: Person) -&gt; Int  {
+        guard person.weapon != nil else { return 0 }
+        switch person.personType {
+        case .Dwarf: return 1
+        case .God, .Wizard: return  50
+        case .Knight: return 5
+        case .Poet: return  20
+        }
+    }
+}
+
+print(&quot;\n----------LordOfCoin adjusted the price of weapons ---------&quot;)
+group = group.map({ (var p) -&gt; Person in
+    p.weapon?.price += LordOfCoin.adjustWeaponPrice(p)
+    return p
+})
+print(group.map{$0.description})
+print(&quot;\n----------LordOfCoin calculate the total cost after tax ---------&quot;)
+let totalCost = group.map{LordOfCoin.calculateWeaponCostAfterTax($0)}.reduce(0, combine: +)
+let totalCostBeforeTax = group.map{$0.weapon!.price}.reduce(0, combine: +)
+print(&quot;total cost after tax: \(totalCost)#  (before tax: \(totalCostBeforeTax)#)\n&quot;)</code></pre></figure><p><a href=/assets/images/wp-content/uploads/2015/07/factory-2.png&#x27;><img class="aligncenter size-full wp-image-982" src=/assets/images/wp-content/uploads/2015/07/factory-2.png alt="factory 2" width=530 height=358></a></p><p></p><p></p></div></article></div></div><footer class=site-footer><div class=wrapper><h2 class=footer-heading></h2><div class=footer-col-wrapper><div class="footer-col footer-col-1"><ul class=contact-list><li></li><li><a href=mailto:me@audreyli.me>me@audreyli.me</a></li></ul></div><div class="footer-col footer-col-2"><ul class=social-media-list><li><a href=https://twitter.com/vidaaudrey><span class="icon icon--twitter"><svg viewBox="0 0 16 16"><path fill=#828282 d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809
+                  c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27
+                  c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767
+                  c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206
+                  C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271
+                  c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469
+                  c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg> </span><span class=username>vidaaudrey</span></a></li></ul></div><div class="footer-col footer-col-3"><p class=text>Audrey Li's personal blog</p></div></div></div></footer><script src=https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js></script><script src=https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/js/bootstrap.js></script><script src=/assets/javascript/index-f8fab38504.min.js></script></body></html>

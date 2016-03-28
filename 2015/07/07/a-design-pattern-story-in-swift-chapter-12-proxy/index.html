@@ -1,0 +1,258 @@
+<!DOCTYPE html><html xmlns=http://www.w3.org/1999/xhtml xml:lang=en lang=en-us><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><title>A Design Pattern Story in Swift – Chapter 12: Proxy</title><meta name=description content="Life is too short to do everything by ourselves, so we often let others do things for us. When the good people of the village need their own cat pets, they g..."><link rel=canonical href=http://audreyli.me/2015/07/07/a-design-pattern-story-in-swift-chapter-12-proxy/ ><link rel=stylesheet href=/assets/stylesheets/style-90cc5d106a.min.css><link rel="shortcut icon" href=/assets/favicon.ico><link rel=apple-touch-icon sizes=57x57 href=/assets/images/favicons/apple-touch-icon-57x57.png><link rel=apple-touch-icon sizes=60x60 href=/assets/images/favicons/apple-touch-icon-60x60.png><link rel=apple-touch-icon sizes=72x72 href=/assets/images/favicons/apple-touch-icon-72x72.png><link rel=apple-touch-icon sizes=76x76 href=/assets/images/favicons/apple-touch-icon-76x76.png><link rel=apple-touch-icon sizes=114x114 href=/assets/images/favicons/apple-touch-icon-114x114.png><link rel=apple-touch-icon sizes=120x120 href=/assets/images/favicons/apple-touch-icon-120x120.png><link rel=apple-touch-icon sizes=144x144 href=/assets/images/favicons/apple-touch-icon-144x144.png><link rel=apple-touch-icon sizes=152x152 href=/assets/images/favicons/apple-touch-icon-152x152.png><link rel=apple-touch-icon sizes=180x180 href=/assets/images/favicons/apple-touch-icon-180x180.png><link rel=icon type=image/png href=/assets/images/favicons/favicon-32x32.png sizes=32x32><link rel=stylesheet href=https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/css/bootstrap.css><link rel=stylesheet href=https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css><link type=application/atom+xml rel=alternate href=http://audreyli.me/feed.xml title=vidaaudrey-blog></head><body><header class=site-header><div class=wrapper><a class=site-title href=/ >vidaaudrey-blog</a><nav class=site-nav><a href=# class=menu-icon><svg viewBox="0 0 18 15"><path fill=#424242 d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/><path fill=#424242 d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/><path fill=#424242 d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/></svg></a><div class=trigger><a class=page-link href=/about/ >About</a> <a class=page-link href=/ >Home</a></div></nav></div></header><div class=page-content><div class=wrapper><article class=post itemscope itemtype=http://schema.org/BlogPosting><header class=post-header><h1 class=post-title itemprop="name headline">A Design Pattern Story in Swift – Chapter 12: Proxy</h1><p class=post-meta><time datetime=2015-07-07T00:00:00-07:00 itemprop=datePublished>Jul 7, 2015</time> • <span itemprop=author itemscope itemtype=http://schema.org/Person><span itemprop=name>Audrey</span></span></p></header><div class=post-content itemprop=articleBody><p>Life is too short to do everything by ourselves, so we often let others do things for us.</p><p>When the good people of the village need their own cat pets, they go to different proxies. The proxies would then do some god-knows-what kind of trick and get the villagers some cats.</p><p>First, it&#8217;s the entry-level Simple Cat Proxy called &#8211; &#8220;SimpleCatRequestProxy&#8221;. You request a cat and he&#8217;ll get a cat from the remote cat house.</p><figure class=highlight><pre><code class=language-swift data-lang=swift>protocol SimpleCatRequest {
+    func getCat(url: String, name: String) -&gt; Cat?
+}
+
+//: Use CatRequestProxy to get cat photo from a remote place
+class SimpleCatRequestProxy: SimpleCatRequest {
+    private let semaphore = dispatch_semaphore_create(0)
+    func getCat(url: String, name: String) -&gt; Cat? {
+        print(&quot;Trying to get \(name) from the SimpleCatProxy&quot;)
+        var cat: Cat?
+        guard let url: NSURL = NSURL(string:url) else { return nil }
+        let task = NSURLSession.sharedSession().dataTaskWithURL(url) {
+            (data, _, _) -&gt; Void in
+            cat = Cat(name: name, image: UIImage(data: data!))
+            print(&quot;Got \(name) from remote \n&quot;)
+            dispatch_semaphore_signal(self.semaphore)
+        }
+        task?.resume()
+        dispatch_semaphore_wait(self.semaphore, DISPATCH_TIME_FOREVER)
+        return cat
+    }
+}
+//: Creating the proxy and get a cat from the proxy
+let simpleCatProxy = SimpleCatRequestProxy()
+let cat = simpleCatProxy.getCat(Config.RandomCatURL, name: &quot;Cat Ada&quot;)
+cat?.view</code></pre></figure><p><a href=/assets/images/wp-content/uploads/2015/07/remote.png><img class="aligncenter size-full wp-image-1030" src=/assets/images/wp-content/uploads/2015/07/remote.png alt=remote width=744 height=298></a>The next is the Clone (cache) Cat Proxy. He will create a local clone once he got a cat from the remote cat house. When others request the cat, he will first look at his cloned list. If the clone exists, he will return a clone. If not, he will get the cat from the remote cat house.</p><figure class=highlight><pre><code class=language-swift data-lang=swift>class ClonedCatRequestProxy: SimpleCatRequest {
+    private let semaphore = dispatch_semaphore_create(0)
+    private let queue = dispatch_queue_create(&quot;remoteCatQ&quot;, DISPATCH_QUEUE_SERIAL)
+    private var clonedCats:[String : Cat] = [:]
+    
+    func getCat(url: String, name: String) -&gt; Cat? {
+        print(&quot;Trying to get \(name) from the ClonedCatProxy&quot;)
+        var cat: Cat?
+        dispatch_sync(queue) { () -&gt; Void in
+            if let clonedCat = self.clonedCats[name] {
+                cat = clonedCat
+                print(&quot;We already got \(name). No need to get remotely&quot;)
+            } else {
+                guard let url: NSURL = NSURL(string:url) else { return }
+                let task = NSURLSession.sharedSession().dataTaskWithURL(url) {
+                    (data, _, _) -&gt; Void in
+                     cat = Cat(name: name, image: UIImage(data: data!))
+                    self.clonedCats[name] = cat
+                    print(&quot;Got \(name) from remote \n&quot;)
+                    dispatch_semaphore_signal(self.semaphore)
+                }
+                task?.resume()
+                dispatch_semaphore_wait(self.semaphore, DISPATCH_TIME_FOREVER)
+            }
+        }
+        return cat
+    }
+}
+
+let cloneCatProxy = ClonedCatRequestProxy()
+let catBebe = cloneCatProxy.getCat(Config.RandomCatURL, name: &quot;Cat Bebe&quot;)
+let catDodo = cloneCatProxy.getCat(Config.RandomCatURL, name: &quot;Cat Dodo&quot;)
+let catDidi = cloneCatProxy.getCat(Config.RandomCatURL, name: &quot;Cat Didi&quot;)
+
+let catDidiClone = cloneCatProxy.getCat(Config.RandomCatURL, name: &quot;Cat Dodo&quot;)
+catBebe?.view
+
+catDodo?.view
+catDidiClone?.view
+
+catDidi?.view</code></pre></figure><p><img class="aligncenter size-full wp-image-1035" src=/assets/images/wp-content/uploads/2015/07/cached.png alt=cached width=774 height=874> The third one is Batch (Virtual) Cat Proxy. When people request cats, he simply writes down their requests and later fetch the cats from remote cat house in a big batch.</p><figure class=highlight><pre><code class=language-swift data-lang=swift>protocol BatchCatRequest {
+    init(url: String, numberOfCats: Int)
+    func getCat(name: String, callback: (String: Cat) -&gt; Void)
+    func execute()
+}
+
+class BatchCatRequestProxy: BatchCatRequest {
+    let url: String
+    var batchedCatRequest:[String: (Cat) -&gt; Void] = [:]
+    
+    required init(url: String, numberOfCats: Int = 1){
+        self.url = url
+    }
+    func getCat(name: String, callback: (String: Cat)  -&gt; Void) {
+        batchedCatRequest[name] = callback
+    }
+    func execute() {
+        guard let url: NSURL = NSURL(string:url) else { return }
+        
+        let task = NSURLSession.sharedSession().dataTaskWithURL(url) {
+            (data, _, _) -&gt; Void in
+            print(&quot;\n Trying to get \(self.batchedCatRequest.keys.array) from the BatchCatProxy&quot;)
+            for (name, callback) in self.batchedCatRequest {
+                let cat = Cat(name: name, image: UIImage(data: data!))
+                callback(cat)
+                print(&quot;Got \(name) from remote \n&quot;)
+            }
+        }
+        task?.resume()
+    }
+}
+
+let batchCatProxy = BatchCatRequestProxy(url: Config.RandomCatURL)
+batchCatProxy.getCat(&quot;Xixi1&quot;){
+    $0.view
+    
+}
+
+batchCatProxy.getCat(&quot;DongDong1&quot;) { (cat) -&gt; Void in
+    cat.view!
+}
+batchCatProxy.execute()</code></pre></figure><p><a href=/assets/images/wp-content/uploads/2015/07/batchProxydefer.png><img class="aligncenter size-full wp-image-1034" src=/assets/images/wp-content/uploads/2015/07/batchProxydefer.png alt=batchProxy(defer) width=778 height=1066></a></p><p>The first Batch Cat Proxy always retrieves the same cats remotely but people want different cats. So they go to the batch unique cat proxy, who keeps a number of different options of cats.</p><figure class=highlight><pre><code class=language-swift data-lang=swift>class BatchUniqueCatRequestProxy: BatchCatRequest {
+    var catURLs:[String] = []
+    var batchedCatRequest:[String: (Cat) -&gt; Void] = [:]
+    
+    required init(url: String, numberOfCats: Int){
+        let fullURL = &quot;\(url)\(numberOfCats)&quot;
+        self.catURLs = getCatURLs(fullURL)
+    }
+    func getCat(name: String, callback: (String: Cat)  -&gt; Void) {
+        batchedCatRequest[name] = callback
+    }
+    func execute() {
+        if catURLs.count &gt; 0 &amp;&amp; batchedCatRequest.count &gt; 0 &amp;&amp; catURLs.count &gt; batchedCatRequest.count {
+            var i = 0
+             print(&quot;\n Trying to get \(self.batchedCatRequest.keys.array) from the BatchUniqueCatProxy&quot;)
+            for (name, callback) in self.batchedCatRequest {
+                guard let url: NSURL = NSURL(string:self.catURLs[i]) else { return }
+                print(&quot;&quot;)
+                let task = NSURLSession.sharedSession().dataTaskWithURL(url) {
+                    (data, _, _) -&gt; Void in
+                    let cat = Cat(name: name, image: UIImage(data: data!))
+                    print(&quot;Got \(name) from remote \n&quot;)
+                    callback(cat)
+                }
+                i++
+                task?.resume()
+            }
+        }
+    }
+    
+    private func getCatURLs(url: String) -&gt; [String] {
+        var urls:[String] = []
+        do {
+            let str = try String(contentsOfURL: NSURL(string: url)!, encoding: NSUTF8StringEncoding)
+            let xml1 = SWXMLHash.parse(str)
+            let images = xml1[&quot;response&quot;][&quot;data&quot;][&quot;images&quot;][&quot;image&quot;].all
+            
+            for image in images {
+                if let str:String = image[&quot;url&quot;].element?.text {
+                    let url = str.stringByReplacingOccurrencesOfString(&quot;\n&quot;,withString: &quot;&quot;).stringByReplacingOccurrencesOfString(&quot; &quot;, withString: &quot;&quot;)
+                    urls.append(url)
+                }
+            }
+        } catch {
+            print(&quot;error getting the cat urls &quot;)
+        }
+         return urls
+    }
+}</code></pre></figure><p><a href=/assets/images/wp-content/uploads/2015/07/batchUnique.png><img class="aligncenter size-full wp-image-1031" src=/assets/images/wp-content/uploads/2015/07/batchUnique.png alt=batchUnique width=895 height=676></a></p><p>The last one is the Secure(Protection) Proxy.  He is always quite serious and have to check everybody&#8217;s &#8220;passcode&#8221; before giving them any cats.</p><figure class=highlight><pre><code class=language-swift data-lang=swift>class UserAuthentication {
+    var user:String?;
+    var authenticated:Bool = false;
+    
+    private init() {
+        // do nothing - stops instances being created
+    }
+    
+    func authenticate(user:String, pass:String) {
+        if (pass == &quot;secret&quot;) {
+            self.user = user;
+            self.authenticated = true;
+            print(&quot;user authenticated&quot;)
+        } else {
+            self.user = nil;
+            self.authenticated = false;
+            print(&quot;user not authenticated&quot;)
+        }
+    }
+    
+   static let sharedInstance: UserAuthentication = UserAuthentication()
+}
+//:ControlAccessProxy 
+class SecuredCatRequestProxy: BatchCatRequest {
+    private let wrapperObject: BatchCatRequest
+    required init(url: String, numberOfCats: Int = 1){
+        wrapperObject = BatchCatRequestProxy(url: url)
+    }
+    func getCat(name: String, callback: (String: Cat) -&gt; Void) {
+        wrapperObject.getCat(name, callback: callback)
+    }
+    func execute() {
+        if UserAuthentication.sharedInstance.authenticated {
+            wrapperObject.execute()
+        } else {
+            print(&quot;Can&#39;t get cat if you are not authorized&quot;)
+            fatalError(&quot;Can&#39;t get cat if you are not authorized&quot;)
+        }
+    }
+}
+
+
+
+let secureProxy = SecuredCatRequestProxy(url: Config.RandomCatURL)
+secureProxy.getCat(&quot;XixiSecure&quot;){
+    $0.view
+}
+
+UserAuthentication.sharedInstance.authenticate(&quot;Jane&quot;, pass: &quot;secret&quot;)
+secureProxy.execute()</code></pre></figure><p><a href=/assets/images/wp-content/uploads/2015/07/secure.png><img class="aligncenter size-full wp-image-1032" src=/assets/images/wp-content/uploads/2015/07/secure.png alt=secure width=848 height=595></a></p><p>The rest of the code:</p><figure class=highlight><pre><code class=language-swift data-lang=swift>import Foundation
+import UIKit
+import XCPlayground
+XCPSetExecutionShouldContinueIndefinitely(true)
+
+func getCat(state:CatNames, caption: String) -&gt; UIView{
+    let image = UIImage(named: state.rawValue)
+    return getCatView(image!, caption: caption)
+}
+func getCatView(image: UIImage, caption: String) -&gt; UIView {
+    let view = UIView(frame: CGRectMake(0, 0, 400, 300))
+    view.clipsToBounds = true
+    let labelView = UILabel(frame: CGRectMake(0, 10, 400, 100))
+    labelView.text = caption
+    labelView.numberOfLines = 0
+    labelView.lineBreakMode = NSLineBreakMode.ByWordWrapping
+    labelView.font = labelView.font.fontWithSize(30)
+    labelView.textColor = UIColor.redColor()
+    labelView.textAlignment = NSTextAlignment.Center
+    let imageView = UIImageView(image: image)
+    imageView.frame = view.frame
+    imageView.contentMode = UIViewContentMode.ScaleAspectFit
+    view.addSubview(imageView)
+    view.addSubview(labelView)
+    return view
+    
+}
+
+struct Cat:CustomStringConvertible {
+    let name: String
+    var image: UIImage?
+    var description: String {
+        let str = image == nil ? &quot;Still requesting&quot; : &quot;Got it&quot;
+        return &quot;\(name) (\(str))&quot;
+    }
+    var view: UIView? {
+        let tempImage = image ?? UIImage(named: &quot;catPlaceholder.jpg&quot;)
+        return getCatView(tempImage!, caption: name)
+    }
+}
+struct Config{
+    static let RandomCatURL = &quot;http://thecatapi.com/api/images/get?format=src&amp;type=gif&quot;
+    static let RandomCatGroupURLPrefix = &quot;http://thecatapi.com/api/images/get?format=xml&amp;results_per_page=&quot;
+}
+enum CatNames:String {
+    case Bored = &quot;bored.jpg&quot;
+    case Happy = &quot;happy.jpg&quot;
+    case PlaceHolder = &quot;catPlaceholder.jpg&quot;
+}</code></pre></figure><p>&nbsp;</p><p>&nbsp;</p><blockquote><p>The proxy pattern is used to provide a surrogate or placeholder object, which references an underlying object. The proxy provides the same public interface as the underlying subject class, adding a level of indirection by accepting requests from a client object and passing these to the real subject object as necessary. &#8212; <strong><em>Gang Of Four</em> </strong></p></blockquote><p>More info:</p><blockquote><p><strong>Remote Proxy</strong> – Represents an object locally which belongs to a different address space. Think of an ATM implementation, it will hold proxy objects for bank information that exists in the remote server.</p><p><strong>Virtual Proxy</strong> – In place of a complex or heavy object, use a skeleton representation. When an underlying image is huge in size, just represent it using a virtual proxy object and on demand load the real object. You know that the real object is expensive in terms of instantiation and so without the real need we are not going to use the real object. Until the need arises we will use the virtual proxy.</p><p><strong>Protection Proxy</strong> – Are you working on an MNC? If so, we might be well aware of the proxy server that provides us internet by restricting access to some sort of websites like public e-mail, social networking, data storage etc. The management feels that, it is better to block some content and provide only work related web pages. Proxy server does that job. This is a type of proxy design pattern. &#8212; <em>Wiki</em></p></blockquote><p>Ref: <a href=www.apress.com/9781484203958>Design Pattern in Swift</a><br>Cat API: <a href=http://thecatapi.com/ >http://thecatapi.com/</a></p></div></article></div></div><footer class=site-footer><div class=wrapper><h2 class=footer-heading></h2><div class=footer-col-wrapper><div class="footer-col footer-col-1"><ul class=contact-list><li></li><li><a href=mailto:me@audreyli.me>me@audreyli.me</a></li></ul></div><div class="footer-col footer-col-2"><ul class=social-media-list><li><a href=https://twitter.com/vidaaudrey><span class="icon icon--twitter"><svg viewBox="0 0 16 16"><path fill=#828282 d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809
+                  c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27
+                  c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767
+                  c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206
+                  C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271
+                  c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469
+                  c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg> </span><span class=username>vidaaudrey</span></a></li></ul></div><div class="footer-col footer-col-3"><p class=text>Audrey Li's personal blog</p></div></div></div></footer><script src=https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js></script><script src=https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/js/bootstrap.js></script><script src=/assets/javascript/index-f8fab38504.min.js></script></body></html>
