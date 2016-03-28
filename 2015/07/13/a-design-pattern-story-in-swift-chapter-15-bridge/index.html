@@ -1,378 +1,127 @@
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
-  <head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<!DOCTYPE html><html xmlns=http://www.w3.org/1999/xhtml xml:lang=en lang=en-us><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><title>A Design Pattern Story in Swift – Chapter 15: Bridge</title><meta name=description content="An IOT Bridge can handle different outgoing and incoming messages for the connected devices, regardless of the message format and the device types."><link rel=canonical href=http://audreyli.me/2015/07/13/a-design-pattern-story-in-swift-chapter-15-bridge/ ><link rel=stylesheet href="http://fonts.googleapis.com/css?family=RobotoDraft:100,300,400|Roboto:300,300italic,400"><link rel=stylesheet href=https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/css/bootstrap.css><link rel=stylesheet href=https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css><link rel=stylesheet href=/assets/stylesheets/style-2e5eb4c593.min.css><link rel="shortcut icon" href=/assets/favicon.ico><link rel=apple-touch-icon sizes=57x57 href=/assets/images/favicons/apple-touch-icon-57x57.png><link rel=apple-touch-icon sizes=60x60 href=/assets/images/favicons/apple-touch-icon-60x60.png><link rel=apple-touch-icon sizes=72x72 href=/assets/images/favicons/apple-touch-icon-72x72.png><link rel=apple-touch-icon sizes=76x76 href=/assets/images/favicons/apple-touch-icon-76x76.png><link rel=apple-touch-icon sizes=114x114 href=/assets/images/favicons/apple-touch-icon-114x114.png><link rel=apple-touch-icon sizes=120x120 href=/assets/images/favicons/apple-touch-icon-120x120.png><link rel=apple-touch-icon sizes=144x144 href=/assets/images/favicons/apple-touch-icon-144x144.png><link rel=apple-touch-icon sizes=152x152 href=/assets/images/favicons/apple-touch-icon-152x152.png><link rel=apple-touch-icon sizes=180x180 href=/assets/images/favicons/apple-touch-icon-180x180.png><link rel=icon type=image/png href=/assets/images/favicons/favicon-32x32.png sizes=32x32><link type=application/atom+xml rel=alternate href=http://audreyli.me/feed.xml title=vidaaudrey-blog></head><body><nav id=push_sidebar><div class=social-icons><img src=/assets/images/audrey-li.jpg alt="Audrey's Photo" class=img-circle> <a href=https://github.com/vidaaudrey title="Audrey's Github"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-github fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.facebook.com/audreyauli title="Audrey's Facebook"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-facebook fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.linkedin.com/in/audreyauli title="Audrey's Google Plus"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i> </span></a><a href=/assets/images/wechat.jpg title="Audrey's Wechat"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-weixin fa-stack-1x fa-inverse"></i></span></a></div><ul><li><a href=/ >Home</a></li><li><a href=/portfolio>Portfolio</a></li><li><a href=/archives>Archives</a></li><li><a href=/feed.xml>Feed</a></li><li><a href=/about>About</a></li></ul></nav><div id=body-wrap><header class=nav-down id=wrapper><div class=container-fluid><a class=navbar-brand href=/ ><img alt=Brand src=/assets/images/normal/logo-dark-round.png></a><span class=nav_trigger><i class="fa fa-bars"></i></span></div></header><div class="jumbotron jumbotron-post" style="background-image: url('/assets/images/wp-content/uploads/2015/07/bridge-.jpg')"><div class=fullwidth-wrapper><div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12"><div class=main-wrap><h2 class=post-title>A Design Pattern Story in Swift – Chapter 15: Bridge</h2><p class=post-date>13 Jul 2015</p></div></div></div></div><main class=row><div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12"><div class=main-wrap><div class="post card post-content"><p>An IOT Bridge can handle different outgoing and incoming messages for the connected devices, regardless of the message format and the device types.</p><blockquote><p><span>The bridge pattern is used to separate the abstract elements of a class from the implementation details, providing the means to replace the implementation details without modifying the abstraction.</span></p></blockquote><figure class=highlight><pre><code class=language-swift data-lang=swift><span class=c1>//: an IOT device can send two kinds of messages: IOTMessage which is the basic format, and EncryptIOTMessage which is encrypted message</span>
+<span class=k>protocol</span> <span class=n>Message</span> <span class=p>{</span>
+    <span class=k>var</span> <span class=nl>messageString</span><span class=p>:</span> <span class=n>String</span> <span class=p>{</span> <span class=kr>get</span> <span class=p>}</span>
+    <span class=k>var</span> <span class=nl>contentToSend</span><span class=p>:</span><span class=n>String</span> <span class=p>{</span> <span class=kr>get</span> <span class=p>}</span>
+    <span class=k>func</span> <span class=n>prepareMessage</span><span class=p>()</span> <span class=o>-&gt;</span> <span class=n>String</span>
+<span class=p>}</span>
 
-  <title>A Design Pattern Story in Swift – Chapter 15: Bridge</title>
-  <meta name="description" content="An IOT Bridge can handle different outgoing and incoming messages for the connected devices, regardless of the message format and the device types.">
-  <link rel="canonical" href="http://audreyli.me/2015/07/13/a-design-pattern-story-in-swift-chapter-15-bridge/">
-  
-  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=RobotoDraft:100,300,400|Roboto:300,300italic,400">
-  <!-- Boostrap -->
-  <link rel="stylesheet" href="https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/css/bootstrap.css">
-  <!-- FontAwesome -->
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
-  
-  <!-- inject:css -->
-  <link rel="stylesheet" href="/assets/stylesheets/style.css">
-  <!-- endinject -->
-
-  <!-- Icons -->
-  <link rel="shortcut icon" href="/assets/favicon.ico">
-  <link rel="apple-touch-icon" sizes="57x57" href="/assets/images/favicons/apple-touch-icon-57x57.png">
-  <link rel="apple-touch-icon" sizes="60x60" href="/assets/images/favicons/apple-touch-icon-60x60.png">
-  <link rel="apple-touch-icon" sizes="72x72" href="/assets/images/favicons/apple-touch-icon-72x72.png">
-  <link rel="apple-touch-icon" sizes="76x76" href="/assets/images/favicons/apple-touch-icon-76x76.png">
-  <link rel="apple-touch-icon" sizes="114x114" href="/assets/images/favicons/apple-touch-icon-114x114.png">
-  <link rel="apple-touch-icon" sizes="120x120" href="/assets/images/favicons/apple-touch-icon-120x120.png">
-  <link rel="apple-touch-icon" sizes="144x144" href="/assets/images/favicons/apple-touch-icon-144x144.png">
-  <link rel="apple-touch-icon" sizes="152x152" href="/assets/images/favicons/apple-touch-icon-152x152.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/favicons/apple-touch-icon-180x180.png">
-  <link rel="icon" type="image/png" href="/assets/images/favicons/favicon-32x32.png" sizes="32x32">
-
-  <!-- RSS -->
-  <link type="application/atom+xml" rel="alternate" href="http://audreyli.me/feed.xml" title="vidaaudrey-blog" />
-</head>
-
-  
-  <body>
-    <nav id="push_sidebar">
-    <div class="social-icons">
-        <img src="/assets/images/audrey-li.jpg" alt="Audrey's Photo" class="img-circle">
-
-        <a href="https://github.com/vidaaudrey" title="Audrey's Github">
-            <span class="fa-stack fa-lg">
-              <i class="fa fa-circle fa-stack-2x"></i>
-              <i class="fa fa-github fa-stack-1x fa-inverse"></i>
-            </span>
-        </a>
-        <a href="https://www.facebook.com/audreyauli" title="Audrey's Facebook">
-            <span class="fa-stack fa-lg">
-              <i class="fa fa-circle fa-stack-2x"></i>
-              <i class="fa fa-facebook fa-stack-1x fa-inverse"></i>
-            </span>
-        </a>
-
-        <a href="https://www.linkedin.com/in/audreyauli" title="Audrey's Google Plus">
-            <span class="fa-stack fa-lg">
-              <i class="fa fa-circle fa-stack-2x"></i>
-              <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
-            </span>
-        </a>
-        
-        <a href="/assets/images/wechat.jpg" title="Audrey's Wechat">
-            <span class="fa-stack fa-lg">
-              <i class="fa fa-circle fa-stack-2x"></i>
-              <i class="fa fa-weixin fa-stack-1x fa-inverse"></i>
-            </span>
-        </a>
-
-    </div>
-
-    <ul>
-      <li><a href="/">Home</a></li>
-      <li><a href="/portfolio">Portfolio</a></li>
-      <li><a href="/archives">Archives</a></li>
-      <li><a href="/atom.xml">Feed</a></li>
-      <li class="rss-subscribe">subscribe <a href="feed.xml">via RSS</a></li>
-      <li><a href="/about">About</a></li>
-    </ul>
-</nav>
+<span class=k>struct</span> <span class=nl>IOTMessage</span><span class=p>:</span> <span class=n>Message</span> <span class=p>{</span>
+    <span class=k>var</span> <span class=nl>messageString</span><span class=p>:</span> <span class=n>String</span>
+    <span class=k>var</span> <span class=nl>contentToSend</span><span class=p>:</span> <span class=n>String</span> <span class=p>{</span><span class=k>return</span> <span class=n>prepareMessage</span><span class=p>()}</span>
+    <span class=k>func</span> <span class=n>prepareMessage</span><span class=p>()</span> <span class=o>-&gt;</span> <span class=n>String</span> <span class=p>{</span>
+        <span class=k>return</span> <span class=s>&quot;Basic Message: \(messageString)&quot;</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+<span class=k>struct</span> <span class=nl>EncryptIOTMessage</span><span class=p>:</span> <span class=n>Message</span> <span class=p>{</span>
+    <span class=k>var</span> <span class=nl>messageString</span><span class=p>:</span> <span class=n>String</span>
+    <span class=k>var</span> <span class=nl>contentToSend</span><span class=p>:</span> <span class=n>String</span> <span class=p>{</span><span class=k>return</span> <span class=n>prepareMessage</span><span class=p>()}</span>
+    <span class=k>func</span> <span class=n>prepareMessage</span><span class=p>()</span> <span class=o>-&gt;</span> <span class=n>String</span> <span class=p>{</span>
+        <span class=k>return</span> <span class=s>&quot;Encrypted Message: \(String(Array(messageString.characters.reverse())))&quot;</span>
+    <span class=p>}</span>
+<span class=p>}</span>
 
 
-    <div id="body-wrap">
-      <header class="nav-down"  id="wrapper">
-    <div class="container-fluid">
-       <a class="navbar-brand" href="/"><img alt="Brand" src="/assets/images/normal/logo-dark-round.png"></a>
-       <span class="nav_trigger"><i class="fa fa-bars"></i></span>
-    </div>
-</header>
+<span class=c1>//: Since an IOT Device is connected, it can process outgoing and incoming messages</span>
+<span class=k>protocol</span> <span class=nl>IOTDevice</span><span class=p>:</span> <span class=n>CustomStringConvertible</span> <span class=p>{</span>
+    <span class=k>func</span> <span class=n>processMessage</span><span class=p>(</span><span class=nl>msg</span><span class=p>:</span> <span class=n>Message</span><span class=p>,</span> <span class=nl>isIncomingMsg</span><span class=p>:</span> <span class=n>Bool</span><span class=p>)</span>
+<span class=p>}</span>
 
-      
-
-<!-- jumbotron for pages -->
-
-<!-- jumbotron for post page, with feature image -->
-  
-      <div class="jumbotron jumbotron-post" style="background-image: url('/assets/images/wp-content/uploads/2015/07/bridge-.jpg')">
-         <div class="fullwidth-wrapper">
-    <div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12 ">
-      <div class="main-wrap">
-           <h2 class="post-title">A Design Pattern Story in Swift – Chapter 15: Bridge</h2>
-            <p class="post-date">13 Jul 2015</p>
-      </div>
-    </div>
-</div>
-        
-      </div>
-
-  <!-- jumbotron for post page, without feature image -->
-  
-
-
-
-
-
-
-      <main class="row">
-          <div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12 ">
-              <div class="main-wrap">
-                <div class="post card post-content">
-   <p>An IOT Bridge can handle different outgoing and incoming messages for the connected devices, regardless of the message format and the device types.</p>
-
-<blockquote>
-<p>
-  <span>The bridge pattern is used to separate the abstract elements of a class from the implementation details, providing the means to replace the implementation details without modifying the abstraction.</span>
-</p>
-</blockquote>
-
-<figure class="highlight"><pre><code class="language-swift" data-lang="swift"><span class="c1">//: an IOT device can send two kinds of messages: IOTMessage which is the basic format, and EncryptIOTMessage which is encrypted message</span>
-<span class="k">protocol</span> <span class="n">Message</span> <span class="p">{</span>
-    <span class="k">var</span> <span class="nl">messageString</span><span class="p">:</span> <span class="n">String</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
-    <span class="k">var</span> <span class="nl">contentToSend</span><span class="p">:</span><span class="n">String</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
-    <span class="k">func</span> <span class="n">prepareMessage</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">String</span>
-<span class="p">}</span>
-
-<span class="k">struct</span> <span class="nl">IOTMessage</span><span class="p">:</span> <span class="n">Message</span> <span class="p">{</span>
-    <span class="k">var</span> <span class="nl">messageString</span><span class="p">:</span> <span class="n">String</span>
-    <span class="k">var</span> <span class="nl">contentToSend</span><span class="p">:</span> <span class="n">String</span> <span class="p">{</span><span class="k">return</span> <span class="n">prepareMessage</span><span class="p">()}</span>
-    <span class="k">func</span> <span class="n">prepareMessage</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">String</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="s">&quot;Basic Message: \(messageString)&quot;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="k">struct</span> <span class="nl">EncryptIOTMessage</span><span class="p">:</span> <span class="n">Message</span> <span class="p">{</span>
-    <span class="k">var</span> <span class="nl">messageString</span><span class="p">:</span> <span class="n">String</span>
-    <span class="k">var</span> <span class="nl">contentToSend</span><span class="p">:</span> <span class="n">String</span> <span class="p">{</span><span class="k">return</span> <span class="n">prepareMessage</span><span class="p">()}</span>
-    <span class="k">func</span> <span class="n">prepareMessage</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">String</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="s">&quot;Encrypted Message: \(String(Array(messageString.characters.reverse())))&quot;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-
-
-<span class="c1">//: Since an IOT Device is connected, it can process outgoing and incoming messages</span>
-<span class="k">protocol</span> <span class="nl">IOTDevice</span><span class="p">:</span> <span class="n">CustomStringConvertible</span> <span class="p">{</span>
-    <span class="k">func</span> <span class="n">processMessage</span><span class="p">(</span><span class="nl">msg</span><span class="p">:</span> <span class="n">Message</span><span class="p">,</span> <span class="nl">isIncomingMsg</span><span class="p">:</span> <span class="n">Bool</span><span class="p">)</span>
-<span class="p">}</span>
-
-<span class="c1">//: The base class for any kind of IOT devices</span>
-<span class="k">class</span> <span class="nl">Device</span><span class="p">:</span> <span class="n">IOTDevice</span> <span class="p">{</span>
-    <span class="k">var</span> <span class="nl">description</span><span class="p">:</span> <span class="n">String</span> <span class="p">{</span> <span class="k">return</span> <span class="s">&quot;Basic Device returned, Error&quot;</span> <span class="p">}</span>
+<span class=c1>//: The base class for any kind of IOT devices</span>
+<span class=k>class</span> <span class=nl>Device</span><span class=p>:</span> <span class=n>IOTDevice</span> <span class=p>{</span>
+    <span class=k>var</span> <span class=nl>description</span><span class=p>:</span> <span class=n>String</span> <span class=p>{</span> <span class=k>return</span> <span class=s>&quot;Basic Device returned, Error&quot;</span> <span class=p>}</span>
     
-    <span class="k">enum</span> <span class="n">Devices</span> <span class="p">{</span>
-        <span class="k">case</span> <span class="n">WeigthScale</span>
-        <span class="k">case</span> <span class="n">HumidityDetector</span>
-    <span class="p">}</span>
+    <span class=k>enum</span> <span class=n>Devices</span> <span class=p>{</span>
+        <span class=k>case</span> <span class=n>WeigthScale</span>
+        <span class=k>case</span> <span class=n>HumidityDetector</span>
+    <span class=p>}</span>
     
-    <span class="k">class</span> <span class="k">func</span> <span class="n">getDevice</span><span class="p">(</span><span class="nl">deviceType</span><span class="p">:</span> <span class="n">Devices</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Device</span> <span class="p">{</span>
-        <span class="k">switch</span> <span class="n">deviceType</span> <span class="p">{</span>
-        <span class="k">case</span> <span class="p">.</span><span class="nl">WeigthScale</span><span class="p">:</span> <span class="k">return</span> <span class="n">WeightScale</span><span class="p">()</span>
-        <span class="k">case</span> <span class="p">.</span><span class="nl">HumidityDetector</span><span class="p">:</span> <span class="k">return</span> <span class="n">HumidityDetector</span><span class="p">()</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-    <span class="k">func</span> <span class="n">processMessage</span><span class="p">(</span><span class="nl">msg</span><span class="p">:</span> <span class="n">Message</span><span class="p">,</span> <span class="nl">isIncomingMsg</span><span class="p">:</span> <span class="n">Bool</span><span class="p">)</span> <span class="p">{</span>
-        <span class="n">fatalError</span><span class="p">(</span><span class="s">&quot;Something wrong!&quot;</span><span class="p">)</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+    <span class=k>class</span> <span class=k>func</span> <span class=n>getDevice</span><span class=p>(</span><span class=nl>deviceType</span><span class=p>:</span> <span class=n>Devices</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Device</span> <span class=p>{</span>
+        <span class=k>switch</span> <span class=n>deviceType</span> <span class=p>{</span>
+        <span class=k>case</span> <span class=p>.</span><span class=nl>WeigthScale</span><span class=p>:</span> <span class=k>return</span> <span class=n>WeightScale</span><span class=p>()</span>
+        <span class=k>case</span> <span class=p>.</span><span class=nl>HumidityDetector</span><span class=p>:</span> <span class=k>return</span> <span class=n>HumidityDetector</span><span class=p>()</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+    <span class=k>func</span> <span class=n>processMessage</span><span class=p>(</span><span class=nl>msg</span><span class=p>:</span> <span class=n>Message</span><span class=p>,</span> <span class=nl>isIncomingMsg</span><span class=p>:</span> <span class=n>Bool</span><span class=p>)</span> <span class=p>{</span>
+        <span class=n>fatalError</span><span class=p>(</span><span class=s>&quot;Something wrong!&quot;</span><span class=p>)</span>
+    <span class=p>}</span>
+<span class=p>}</span>
 
-<span class="c1">//: A connected Weight Scale</span>
-<span class="k">class</span> <span class="nl">WeightScale</span><span class="p">:</span> <span class="n">Device</span> <span class="p">{</span>
-    <span class="kr">override</span> <span class="k">var</span> <span class="nl">description</span><span class="p">:</span> <span class="n">String</span> <span class="p">{</span> <span class="k">return</span> <span class="s">&quot;Weight Scale&quot;</span> <span class="p">}</span>
-    <span class="kr">override</span> <span class="k">func</span> <span class="n">processMessage</span><span class="p">(</span><span class="nl">msg</span><span class="p">:</span> <span class="n">Message</span><span class="p">,</span> <span class="nl">isIncomingMsg</span><span class="p">:</span> <span class="n">Bool</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">if</span> <span class="n">isIncomingMsg</span> <span class="p">{</span>
-            <span class="n">print</span><span class="p">(</span><span class="s">&quot;Incoming message:[\(msg.contentToSend)]&quot;</span><span class="p">)</span>
-        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-            <span class="n">print</span><span class="p">(</span><span class="s">&quot;Outgoing message: [\(msg.contentToSend)]&quot;</span><span class="p">)</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="c1">//: A connected HumidityDetector</span>
-<span class="k">class</span> <span class="nl">HumidityDetector</span><span class="p">:</span> <span class="n">Device</span> <span class="p">{</span>
-    <span class="kr">override</span> <span class="k">var</span> <span class="nl">description</span><span class="p">:</span> <span class="n">String</span> <span class="p">{</span> <span class="k">return</span> <span class="s">&quot;Humidity Detector&quot;</span> <span class="p">}</span>
-    <span class="kr">override</span> <span class="k">func</span> <span class="n">processMessage</span><span class="p">(</span><span class="nl">msg</span><span class="p">:</span> <span class="n">Message</span><span class="p">,</span> <span class="nl">isIncomingMsg</span><span class="p">:</span> <span class="n">Bool</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">if</span> <span class="n">isIncomingMsg</span> <span class="p">{</span>
-            <span class="n">print</span><span class="p">(</span><span class="s">&quot;Incoming message:[\(msg.contentToSend)]&quot;</span><span class="p">)</span>
-        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-            <span class="n">print</span><span class="p">(</span><span class="s">&quot;Outgoing message:[\(msg.contentToSend)]&quot;</span><span class="p">)</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+<span class=c1>//: A connected Weight Scale</span>
+<span class=k>class</span> <span class=nl>WeightScale</span><span class=p>:</span> <span class=n>Device</span> <span class=p>{</span>
+    <span class=kr>override</span> <span class=k>var</span> <span class=nl>description</span><span class=p>:</span> <span class=n>String</span> <span class=p>{</span> <span class=k>return</span> <span class=s>&quot;Weight Scale&quot;</span> <span class=p>}</span>
+    <span class=kr>override</span> <span class=k>func</span> <span class=n>processMessage</span><span class=p>(</span><span class=nl>msg</span><span class=p>:</span> <span class=n>Message</span><span class=p>,</span> <span class=nl>isIncomingMsg</span><span class=p>:</span> <span class=n>Bool</span><span class=p>)</span> <span class=p>{</span>
+        <span class=k>if</span> <span class=n>isIncomingMsg</span> <span class=p>{</span>
+            <span class=n>print</span><span class=p>(</span><span class=s>&quot;Incoming message:[\(msg.contentToSend)]&quot;</span><span class=p>)</span>
+        <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+            <span class=n>print</span><span class=p>(</span><span class=s>&quot;Outgoing message: [\(msg.contentToSend)]&quot;</span><span class=p>)</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+<span class=c1>//: A connected HumidityDetector</span>
+<span class=k>class</span> <span class=nl>HumidityDetector</span><span class=p>:</span> <span class=n>Device</span> <span class=p>{</span>
+    <span class=kr>override</span> <span class=k>var</span> <span class=nl>description</span><span class=p>:</span> <span class=n>String</span> <span class=p>{</span> <span class=k>return</span> <span class=s>&quot;Humidity Detector&quot;</span> <span class=p>}</span>
+    <span class=kr>override</span> <span class=k>func</span> <span class=n>processMessage</span><span class=p>(</span><span class=nl>msg</span><span class=p>:</span> <span class=n>Message</span><span class=p>,</span> <span class=nl>isIncomingMsg</span><span class=p>:</span> <span class=n>Bool</span><span class=p>)</span> <span class=p>{</span>
+        <span class=k>if</span> <span class=n>isIncomingMsg</span> <span class=p>{</span>
+            <span class=n>print</span><span class=p>(</span><span class=s>&quot;Incoming message:[\(msg.contentToSend)]&quot;</span><span class=p>)</span>
+        <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+            <span class=n>print</span><span class=p>(</span><span class=s>&quot;Outgoing message:[\(msg.contentToSend)]&quot;</span><span class=p>)</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+<span class=p>}</span>
 
-<span class="c1">//: Just a communication protocol, not important here</span>
-<span class="k">protocol</span> <span class="n">IOTCommunication</span> <span class="p">{</span>
-    <span class="k">var</span> <span class="nl">device</span><span class="p">:</span><span class="n">IOTDevice</span> <span class="p">{</span> <span class="kr">get</span> <span class="kr">set</span> <span class="p">}</span>
-    <span class="k">func</span> <span class="n">processBridgeMessage</span><span class="p">(</span><span class="nl">msg</span><span class="p">:</span> <span class="n">Message</span><span class="p">,</span> <span class="nl">isIncomingMsg</span><span class="p">:</span> <span class="n">Bool</span><span class="p">)</span>
-<span class="p">}</span>
+<span class=c1>//: Just a communication protocol, not important here</span>
+<span class=k>protocol</span> <span class=n>IOTCommunication</span> <span class=p>{</span>
+    <span class=k>var</span> <span class=nl>device</span><span class=p>:</span><span class=n>IOTDevice</span> <span class=p>{</span> <span class=kr>get</span> <span class=kr>set</span> <span class=p>}</span>
+    <span class=k>func</span> <span class=n>processBridgeMessage</span><span class=p>(</span><span class=nl>msg</span><span class=p>:</span> <span class=n>Message</span><span class=p>,</span> <span class=nl>isIncomingMsg</span><span class=p>:</span> <span class=n>Bool</span><span class=p>)</span>
+<span class=p>}</span>
 
-<span class="c1">//: The bridge to handle the message processing of IOT devices</span>
-<span class="k">struct</span> <span class="nl">IOTBridge</span><span class="p">:</span> <span class="n">IOTCommunication</span> <span class="p">{</span>
-    <span class="k">var</span> <span class="nl">device</span><span class="p">:</span> <span class="n">IOTDevice</span> <span class="p">{</span>
-        <span class="kr">didSet</span> <span class="p">{</span>
-            <span class="n">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">set bridge device to:\(device.description)&quot;</span><span class="p">)</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
+<span class=c1>//: The bridge to handle the message processing of IOT devices</span>
+<span class=k>struct</span> <span class=nl>IOTBridge</span><span class=p>:</span> <span class=n>IOTCommunication</span> <span class=p>{</span>
+    <span class=k>var</span> <span class=nl>device</span><span class=p>:</span> <span class=n>IOTDevice</span> <span class=p>{</span>
+        <span class=kr>didSet</span> <span class=p>{</span>
+            <span class=n>print</span><span class=p>(</span><span class=s>&quot;</span><span class=se>\n</span><span class=s>set bridge device to:\(device.description)&quot;</span><span class=p>)</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
 
-    <span class="n">internal</span> <span class="k">func</span> <span class="n">processBridgeMessage</span><span class="p">(</span><span class="nl">msg</span><span class="p">:</span> <span class="n">Message</span><span class="p">,</span> <span class="nl">isIncomingMsg</span><span class="p">:</span> <span class="n">Bool</span><span class="p">)</span> <span class="p">{</span>
-        <span class="n">device</span><span class="p">.</span><span class="n">processMessage</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="nl">isIncomingMsg</span><span class="p">:</span> <span class="n">isIncomingMsg</span><span class="p">)</span>
-    <span class="p">}</span>
-    <span class="k">func</span> <span class="n">sendMessage</span><span class="p">(</span><span class="nl">msg</span><span class="p">:</span> <span class="n">String</span><span class="p">,</span> <span class="nl">encrypted</span><span class="p">:</span> <span class="n">Bool</span> <span class="o">=</span> <span class="nb">false</span> <span class="p">){</span>
-        <span class="k">let</span> <span class="n">msgStr</span> <span class="o">=</span> <span class="n">device</span><span class="p">.</span><span class="n">description</span> <span class="o">+</span> <span class="s">&quot; &quot;</span> <span class="o">+</span>  <span class="n">msg</span>
-        <span class="k">let</span> <span class="nl">iotMsg</span><span class="p">:</span> <span class="n">Message</span> <span class="o">=</span> <span class="n">encrypted</span> <span class="o">?</span> <span class="n">EncryptIOTMessage</span><span class="p">(</span><span class="nl">messageString</span><span class="p">:</span> <span class="n">msgStr</span><span class="p">)</span> <span class="o">:</span> <span class="n">IOTMessage</span><span class="p">(</span><span class="nl">messageString</span><span class="p">:</span> <span class="n">msgStr</span><span class="p">)</span>
-        <span class="n">processBridgeMessage</span><span class="p">(</span><span class="n">iotMsg</span><span class="p">,</span> <span class="nl">isIncomingMsg</span><span class="p">:</span> <span class="nb">false</span><span class="p">)</span>
-    <span class="p">}</span>
-    <span class="k">func</span> <span class="n">receiveMessage</span><span class="p">(</span><span class="nl">msg</span><span class="p">:</span> <span class="n">String</span><span class="p">,</span> <span class="nl">encrypted</span><span class="p">:</span> <span class="n">Bool</span> <span class="o">=</span> <span class="nb">false</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">let</span> <span class="n">clearMsg</span> <span class="o">=</span> <span class="n">encrypted</span> <span class="o">?</span> <span class="n">String</span><span class="p">(</span><span class="n">Array</span><span class="p">(</span><span class="n">msg</span><span class="p">.</span><span class="n">characters</span><span class="p">.</span><span class="n">reverse</span><span class="p">()))</span> <span class="o">:</span> <span class="n">msg</span>
-        <span class="k">var</span> <span class="n">msgStr</span> <span class="o">=</span>  <span class="s">&quot;\(device.description)  \(msg)&quot;</span>
-        <span class="k">if</span> <span class="n">encrypted</span> <span class="p">{</span>
-            <span class="n">msgStr</span> <span class="o">+=</span> <span class="s">&quot;(decrypted: \(clearMsg))&quot;</span>
-        <span class="p">}</span>
-        <span class="n">processBridgeMessage</span><span class="p">(</span><span class="n">IOTMessage</span><span class="p">(</span><span class="nl">messageString</span><span class="p">:</span> <span class="n">msgStr</span><span class="p">),</span> <span class="nl">isIncomingMsg</span><span class="p">:</span> <span class="nb">true</span><span class="p">)</span>
-    <span class="p">}</span>
+    <span class=n>internal</span> <span class=k>func</span> <span class=n>processBridgeMessage</span><span class=p>(</span><span class=nl>msg</span><span class=p>:</span> <span class=n>Message</span><span class=p>,</span> <span class=nl>isIncomingMsg</span><span class=p>:</span> <span class=n>Bool</span><span class=p>)</span> <span class=p>{</span>
+        <span class=n>device</span><span class=p>.</span><span class=n>processMessage</span><span class=p>(</span><span class=n>msg</span><span class=p>,</span> <span class=nl>isIncomingMsg</span><span class=p>:</span> <span class=n>isIncomingMsg</span><span class=p>)</span>
+    <span class=p>}</span>
+    <span class=k>func</span> <span class=n>sendMessage</span><span class=p>(</span><span class=nl>msg</span><span class=p>:</span> <span class=n>String</span><span class=p>,</span> <span class=nl>encrypted</span><span class=p>:</span> <span class=n>Bool</span> <span class=o>=</span> <span class=nb>false</span> <span class=p>){</span>
+        <span class=k>let</span> <span class=n>msgStr</span> <span class=o>=</span> <span class=n>device</span><span class=p>.</span><span class=n>description</span> <span class=o>+</span> <span class=s>&quot; &quot;</span> <span class=o>+</span>  <span class=n>msg</span>
+        <span class=k>let</span> <span class=nl>iotMsg</span><span class=p>:</span> <span class=n>Message</span> <span class=o>=</span> <span class=n>encrypted</span> <span class=o>?</span> <span class=n>EncryptIOTMessage</span><span class=p>(</span><span class=nl>messageString</span><span class=p>:</span> <span class=n>msgStr</span><span class=p>)</span> <span class=o>:</span> <span class=n>IOTMessage</span><span class=p>(</span><span class=nl>messageString</span><span class=p>:</span> <span class=n>msgStr</span><span class=p>)</span>
+        <span class=n>processBridgeMessage</span><span class=p>(</span><span class=n>iotMsg</span><span class=p>,</span> <span class=nl>isIncomingMsg</span><span class=p>:</span> <span class=nb>false</span><span class=p>)</span>
+    <span class=p>}</span>
+    <span class=k>func</span> <span class=n>receiveMessage</span><span class=p>(</span><span class=nl>msg</span><span class=p>:</span> <span class=n>String</span><span class=p>,</span> <span class=nl>encrypted</span><span class=p>:</span> <span class=n>Bool</span> <span class=o>=</span> <span class=nb>false</span><span class=p>)</span> <span class=p>{</span>
+        <span class=k>let</span> <span class=n>clearMsg</span> <span class=o>=</span> <span class=n>encrypted</span> <span class=o>?</span> <span class=n>String</span><span class=p>(</span><span class=n>Array</span><span class=p>(</span><span class=n>msg</span><span class=p>.</span><span class=n>characters</span><span class=p>.</span><span class=n>reverse</span><span class=p>()))</span> <span class=o>:</span> <span class=n>msg</span>
+        <span class=k>var</span> <span class=n>msgStr</span> <span class=o>=</span>  <span class=s>&quot;\(device.description)  \(msg)&quot;</span>
+        <span class=k>if</span> <span class=n>encrypted</span> <span class=p>{</span>
+            <span class=n>msgStr</span> <span class=o>+=</span> <span class=s>&quot;(decrypted: \(clearMsg))&quot;</span>
+        <span class=p>}</span>
+        <span class=n>processBridgeMessage</span><span class=p>(</span><span class=n>IOTMessage</span><span class=p>(</span><span class=nl>messageString</span><span class=p>:</span> <span class=n>msgStr</span><span class=p>),</span> <span class=nl>isIncomingMsg</span><span class=p>:</span> <span class=nb>true</span><span class=p>)</span>
+    <span class=p>}</span>
 
-<span class="p">}</span>
+<span class=p>}</span>
 
-<span class="c1">//: Testing </span>
-<span class="n">print</span><span class="p">(</span><span class="s">&quot;Create the IOT bridge and set the device to Weight Scale&quot;</span><span class="p">)</span>
-<span class="k">var</span> <span class="n">bridge</span> <span class="o">=</span> <span class="n">IOTBridge</span><span class="p">(</span><span class="nl">device</span><span class="p">:</span> <span class="n">WeightScale</span><span class="p">())</span>
-<span class="n">bridge</span><span class="p">.</span><span class="n">sendMessage</span><span class="p">(</span><span class="s">&quot;120lb&quot;</span><span class="p">)</span>
-<span class="n">bridge</span><span class="p">.</span><span class="n">receiveMessage</span><span class="p">(</span><span class="s">&quot;History Weigth: 110 lb Oct. 20, 2014&quot;</span><span class="p">)</span>
+<span class=c1>//: Testing </span>
+<span class=n>print</span><span class=p>(</span><span class=s>&quot;Create the IOT bridge and set the device to Weight Scale&quot;</span><span class=p>)</span>
+<span class=k>var</span> <span class=n>bridge</span> <span class=o>=</span> <span class=n>IOTBridge</span><span class=p>(</span><span class=nl>device</span><span class=p>:</span> <span class=n>WeightScale</span><span class=p>())</span>
+<span class=n>bridge</span><span class=p>.</span><span class=n>sendMessage</span><span class=p>(</span><span class=s>&quot;120lb&quot;</span><span class=p>)</span>
+<span class=n>bridge</span><span class=p>.</span><span class=n>receiveMessage</span><span class=p>(</span><span class=s>&quot;History Weigth: 110 lb Oct. 20, 2014&quot;</span><span class=p>)</span>
 
-<span class="n">bridge</span><span class="p">.</span><span class="n">device</span> <span class="o">=</span>  <span class="n">HumidityDetector</span><span class="p">()</span>
-<span class="n">bridge</span><span class="p">.</span><span class="n">sendMessage</span><span class="p">(</span><span class="s">&quot;91%&quot;</span><span class="p">)</span>
-<span class="n">bridge</span><span class="p">.</span><span class="n">receiveMessage</span><span class="p">(</span><span class="s">&quot;History Humidity: 45% Aug. 30, 2014, 98% Dec. 21, 2014&quot;</span><span class="p">)</span>
-<span class="n">bridge</span><span class="p">.</span><span class="n">sendMessage</span><span class="p">(</span><span class="s">&quot;45% Aug. 30, 2014&quot;</span><span class="p">,</span> <span class="nl">encrypted</span><span class="p">:</span> <span class="nb">true</span><span class="p">)</span>
-<span class="n">bridge</span><span class="p">.</span><span class="n">receiveMessage</span><span class="p">(</span><span class="s">&quot;4102 ,03 .guA %54 rotceteD ytidimuH&quot;</span><span class="p">,</span> <span class="nl">encrypted</span><span class="p">:</span> <span class="nb">true</span><span class="p">)</span></code></pre></figure>
-
-<p><a href="/assets/images/wp-content/uploads/2015/07/bridge.png"><img class="aligncenter size-full wp-image-1056" src="/assets/images/wp-content/uploads/2015/07/bridge.png" alt="bridge" width="918" height="137" /></a><a href="/assets/images/wp-content/uploads/2015/07/chain-of-responsbility1.png"><br>
-</a></p>
-
- </div>
- <div class="card">
-   <div class="page-nav">
-    <div>
-        
-         <a class="prev" href="/2015/07/13/a-design-pattern-story-in-swift-chapter-14-chain-of-responsibility/"> <i class="fa fa-angle-left"></i></a> 
-          <a class="prev" href="/2015/07/13/a-design-pattern-story-in-swift-chapter-14-chain-of-responsibility/"> A Design Pattern Story in Swift – Chapter 14: Chain Of Responsibility</a>
-        
-    </div>
-    <div>
-        
-          <a class="next" href="/2015/07/14/a-design-pattern-story-in-swift-chapter-16-object-pool/">A Design Pattern Story in Swift – Chapter 16: Object Pool </a>
-         <a class="prev" href="/2015/07/14/a-design-pattern-story-in-swift-chapter-16-object-pool/"> <i class="fa fa-angle-right"></i></a> 
-        
-    </div>
-</div>
-
-
-
- </div>
- <div class="related card">
-   <h2>Related Posts</h2>
-   <ul class="related-posts">
-     
-       <li>
-         <h4>
-           <a href="/general/2015/11/11/singles-day/">
-             Singles Day
-             <small>11 Nov 2015</small>
-           </a>
-         </h4>
-       </li>
-     
-       <li>
-         <h4>
-           <a href="/jekyll/2015/09/27/relocating-my-blog-from-wordpress-to-Jekyll/">
-             Relocating My Blog from Wordpress to Jekyll
-             <small>27 Sep 2015</small>
-           </a>
-         </h4>
-       </li>
-     
-       <li>
-         <h4>
-           <a href="/2015/07/18/a-design-pattern-story-in-swift-chapter-21-interpretor/">
-             A Design Pattern Story in Swift – Chapter 21: Interpretor
-             <small>18 Jul 2015</small>
-           </a>
-         </h4>
-       </li>
-     
-   </ul>
- </div>
- <div class="card">
- <div id="disqus_thread"></div>
-<script type="text/javascript">
-    var disqus_shortname = 'audreyli';
+<span class=n>bridge</span><span class=p>.</span><span class=n>device</span> <span class=o>=</span>  <span class=n>HumidityDetector</span><span class=p>()</span>
+<span class=n>bridge</span><span class=p>.</span><span class=n>sendMessage</span><span class=p>(</span><span class=s>&quot;91%&quot;</span><span class=p>)</span>
+<span class=n>bridge</span><span class=p>.</span><span class=n>receiveMessage</span><span class=p>(</span><span class=s>&quot;History Humidity: 45% Aug. 30, 2014, 98% Dec. 21, 2014&quot;</span><span class=p>)</span>
+<span class=n>bridge</span><span class=p>.</span><span class=n>sendMessage</span><span class=p>(</span><span class=s>&quot;45% Aug. 30, 2014&quot;</span><span class=p>,</span> <span class=nl>encrypted</span><span class=p>:</span> <span class=nb>true</span><span class=p>)</span>
+<span class=n>bridge</span><span class=p>.</span><span class=n>receiveMessage</span><span class=p>(</span><span class=s>&quot;4102 ,03 .guA %54 rotceteD ytidimuH&quot;</span><span class=p>,</span> <span class=nl>encrypted</span><span class=p>:</span> <span class=nb>true</span><span class=p>)</span></code></pre></figure><p><a href=/assets/images/wp-content/uploads/2015/07/bridge.png><img class="aligncenter size-full wp-image-1056" src=/assets/images/wp-content/uploads/2015/07/bridge.png alt=bridge width=918 height=137></a><a href=/assets/images/wp-content/uploads/2015/07/chain-of-responsbility1.png><br></a></p></div><div class=card><div class=page-nav><div><a class=prev href=/2015/07/13/a-design-pattern-story-in-swift-chapter-14-chain-of-responsibility/ ><i class="fa fa-angle-left"></i></a> <a class=prev href=/2015/07/13/a-design-pattern-story-in-swift-chapter-14-chain-of-responsibility/ >A Design Pattern Story in Swift – Chapter 14: Chain Of Responsibility</a></div><div><a class=next href=/2015/07/14/a-design-pattern-story-in-swift-chapter-16-object-pool/ >A Design Pattern Story in Swift – Chapter 16: Object Pool </a><a class=prev href=/2015/07/14/a-design-pattern-story-in-swift-chapter-16-object-pool/ ><i class="fa fa-angle-right"></i></a></div></div></div><div class="related card"><h2>Related Posts</h2><ul class=related-posts><li><h4><a href=/general/2015/11/11/singles-day/ >Singles Day <small>11 Nov 2015</small></a></h4></li><li><h4><a href=/jekyll/2015/09/27/relocating-my-blog-from-wordpress-to-Jekyll/ >Relocating My Blog from Wordpress to Jekyll <small>27 Sep 2015</small></a></h4></li><li><h4><a href=/2015/07/18/a-design-pattern-story-in-swift-chapter-21-interpretor/ >A Design Pattern Story in Swift – Chapter 21: Interpretor <small>18 Jul 2015</small></a></h4></li></ul></div><div class=card><div id=disqus_thread></div><script type=text/javascript>var disqus_shortname = 'audreyli';
     
     (function() {
         var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
         dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
         (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-    })();
-</script>
-<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
- </div>
- 
-
-      
-    
-
-
-
-
-              </div>
-          </div>
-          
-      </main>
-      <footer class="row">
-    <div class="col-md-8 col-md-offset-2 text-center">
-        <a href="http://audreyli.me">  &copy; Copyright 2015 &nbsp; &nbsp; AudreyLi.me &nbsp; &nbsp;</a> 
-       
-        <a href="/archives">Archives &nbsp; &nbsp; </a>
-        <a href="https://github.com/vidaaudrey" title="Audrey's Github">
-            <span class="fa-stack fa-lg">
-              <i class="fa fa-circle fa-stack-2x"></i>
-              <i class="fa fa-github fa-stack-1x fa-inverse"></i>
-            </span>
-        </a>
-    
-        <a href="https://www.linkedin.com/in/audreyauli" title="Audrey's Google Plus">
-            <span class="fa-stack fa-lg">
-              <i class="fa fa-circle fa-stack-2x"></i>
-              <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
-            </span>
-        </a>
-        
-        <a href="/feed.xml" title="RSS Feed">
-            <span class="fa-stack fa-lg">
-              <i class="fa fa-circle fa-stack-2x"></i>
-              <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
-            </span>
-        </a>
-    </div>
-    
-</footer>
-
-      
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js"></script>
-<script src="https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/js/bootstrap.js"></script>
-
-<!-- inject:js -->
-<script src="/assets/javascript/index.js"></script>
-<!-- endinject -->
-
-  </div>
-  <script>
-    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    })();</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript rel=nofollow>comments powered by Disqus.</a></noscript></div></div></div></main><footer class=row><div class="col-md-8 col-md-offset-2 text-center"><a href=http://audreyli.me>&copy; Copyright 2015 &nbsp; &nbsp; AudreyLi.me &nbsp; &nbsp;</a> <a href=/archives>Archives &nbsp; &nbsp; </a><a href=https://github.com/vidaaudrey title="Audrey's Github"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-github fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.linkedin.com/in/audreyauli title="Audrey's Google Plus"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i> </span></a><a href=/feed.xml title="RSS Feed"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-rss fa-stack-1x fa-inverse"></i></span></a></div></footer><script src=https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js></script><script src=https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/js/bootstrap.js></script><script src=/assets/javascript/index.js></script></div><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
     })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
     ga('create', 'UA-68084914-1', 'auto');
-    ga('send', 'pageview');
-
-  </script>
-  </body>
-</html>
+    ga('send', 'pageview');</script></body></html>

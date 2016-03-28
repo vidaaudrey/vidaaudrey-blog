@@ -205,10 +205,6 @@
 <lastmod>2015-02-03T00:00:00-08:00</lastmod>
 </url>
 <url>
-<loc>http://audreyli.me/jekyll/example/2014/03/01/example-content/</loc>
-<lastmod>2014-03-01T00:00:00-08:00</lastmod>
-</url>
-<url>
 <loc>http://audreyli.me/2014/02/21/my-top-resources-to-learn-spanish/</loc>
 <lastmod>2014-02-21T00:00:00-08:00</lastmod>
 </url>
@@ -238,8 +234,5 @@
 </url>
 <url>
 <loc>http://audreyli.me/page5/</loc>
-</url>
-<url>
-<loc>http://audreyli.me/page6/</loc>
 </url>
 </urlset>
