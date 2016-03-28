@@ -1,13 +1,400 @@
-<!DOCTYPE html><html xmlns=http://www.w3.org/1999/xhtml xml:lang=en lang=en-us><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><title>Day 2 &#8211; iOS App Internationalization &#8211; A Simple Multi-lingo Greeting App</title><meta name=description content="I wanted to start something that is related to 3D perspective with Sketch today but somehow I got interested in App Internationalization while watching a lit..."><link rel=canonical href=http://audreyli.me/2015/03/14/day-2-ios-app-internationalization-a-simple-multi-lingo-greeting-app/ ><link rel=stylesheet href="http://fonts.googleapis.com/css?family=RobotoDraft:100,300,400|Roboto:300,300italic,400"><link rel=stylesheet href=https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/css/bootstrap.css><link rel=stylesheet href=https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css><link rel=stylesheet href=/assets/stylesheets/style-b5460305d5.min.css><link rel="shortcut icon" href=/assets/favicon.ico><link rel=apple-touch-icon sizes=57x57 href=/assets/images/favicons/apple-touch-icon-57x57.png><link rel=apple-touch-icon sizes=60x60 href=/assets/images/favicons/apple-touch-icon-60x60.png><link rel=apple-touch-icon sizes=72x72 href=/assets/images/favicons/apple-touch-icon-72x72.png><link rel=apple-touch-icon sizes=76x76 href=/assets/images/favicons/apple-touch-icon-76x76.png><link rel=apple-touch-icon sizes=114x114 href=/assets/images/favicons/apple-touch-icon-114x114.png><link rel=apple-touch-icon sizes=120x120 href=/assets/images/favicons/apple-touch-icon-120x120.png><link rel=apple-touch-icon sizes=144x144 href=/assets/images/favicons/apple-touch-icon-144x144.png><link rel=apple-touch-icon sizes=152x152 href=/assets/images/favicons/apple-touch-icon-152x152.png><link rel=apple-touch-icon sizes=180x180 href=/assets/images/favicons/apple-touch-icon-180x180.png><link rel=icon type=image/png href=/assets/images/favicons/favicon-32x32.png sizes=32x32><link type=application/atom+xml rel=alternate href=http://audreyli.me/feed.xml title=vidaaudrey-blog></head><body><nav id=push_sidebar><div class=social-icons><img src=/assets/images/audrey-li.jpg alt="Audrey's Photo" class=img-circle> <a href=https://github.com/vidaaudrey title="Audrey's Github"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-github fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.facebook.com/audreyauli title="Audrey's Facebook"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-facebook fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.linkedin.com/in/audreyauli title="Audrey's Google Plus"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i> </span></a><a href=/assets/images/wechat.jpg title="Audrey's Wechat"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-weixin fa-stack-1x fa-inverse"></i></span></a></div><ul><li><a href=/ >Home</a></li><li><a href=/portfolio>Portfolio</a></li><li><a href=/archives>Archives</a></li><li><a href=/atom.xml>Feed</a></li><li class=rss-subscribe>subscribe <a href=feed.xml>via RSS</a></li><li><a href=/about>About</a></li></ul></nav><div id=body-wrap><header class=nav-down id=wrapper><div class=container-fluid><a class=navbar-brand href=/ ><img alt=Brand src=/assets/images/normal/logo-dark-round.png></a><span class=nav_trigger><i class="fa fa-bars"></i></span></div></header><div class="jumbotron jumbotron-post-long-feature" style="background-image: url('/assets/images/wp-content/uploads/2015/03/snapshortcn-416x675.png')"><div class=fullwidth-wrapper><div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12"><div class=main-wrap><h2 class=post-title>Day 2 &#8211; iOS App Internationalization &#8211; A Simple Multi-lingo Greeting App</h2><p class=post-date>14 Mar 2015</p></div></div></div></div><main class=row><div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12"><div class=main-wrap><div class="post card post-content"><div>I wanted to start something that is related to 3D perspective with Sketch today but somehow I got interested in App Internationalization while watching a little WWDC video. So I decided to build a simple multi-lingo app to test some ideas.</div><div></div><div>I was excited about the possibilities of the app functions and got really excited. But I am also fully aware of my skills and knowledge level.</div><div></div><div><div class=et_post_video></div></div><div><a href=https://github.com/vidaaudrey/002-Swift-Multilingo-Greeting class="small-button smallorange">Source Code</a></div><div><b>Thoughts</b></div><ul><li>The App will not be complicated but enough to demonstrate the fundamentals of internationalization</li><li>Greetings in different languages should be fun</li><li>Maybe some audio greeting as well</li><li>There are many others things that I can do, but this is literally my first mini App with Swift. I should just focus on the core value of my project today which is to learn iOS internationalization basics</li></ul><div><b></b></div><div><b>Objective</b></div><ul><li>Learn internationalization of Interface strings, programmatically generated strings, image assets, audio files</li><li>Learn how to handle translation files</li><li>Learn Sketch export to speed up development</li><li>Preview and debug in translated languages</li><li>How to process right-to-left language</li></ul><div></div><div><b>Steps</b></div><ol><li>A simple design in Sketch</li><li>Setup Github</li><li>Layout Storyboard, put together the basic App in English</li><li>Add localized strings</li><li>Process the translation file. Personally I found <a href=http://xliff.brightec.co.uk/form.php>Brightec.com</a> quite useful and handy. But with this project, it’s not necessary. All strings can be easily added via Xcode.</li><li>Add localized images. Use the “Localized String” approach to localize images. (The asset image does not support localization so well).</li><li>Programmatically switch language and region. First I thought it was too much trouble. Normally users can do it from the system setting. Later I found a solution in Stackoverflow.com which is to  get files from the respective language folders.</li><li>Add localized audio files</li><li>Refine Autolayout to support multiple devices<ol><li>Other use of NSLocalizedString &amp; best practice  — &gt; check next time</li></ol></li></ol><div><a href=/assets/images/wp-content/uploads/2015/03/sketch-design.png><img class="size-full wp-image-689" src=/assets/images/wp-content/uploads/2015/03/sketch-design.png alt="sketch design  (quite different from the final result )" width=750 height=1334></a><a href=/assets/images/wp-content/uploads/2015/03/how-nice-sketch-support-folder-export.png><img class="size-full wp-image-684" src=/assets/images/wp-content/uploads/2015/03/how-nice-sketch-support-folder-export.png alt="how nice sketch support folder export" width=536 height=681></a><a href=/assets/images/wp-content/uploads/2015/03/image-assets.png><img class="size-full wp-image-682" src=/assets/images/wp-content/uploads/2015/03/image-assets.png alt="Xcode manages image assets very nicely" width=1124 height=796></a><a href=/assets/images/wp-content/uploads/2015/03/first-version-in-english.png><img class="size-full wp-image-687" src=/assets/images/wp-content/uploads/2015/03/first-version-in-english.png alt="first version in english" width=373 height=690></a><a href=/assets/images/wp-content/uploads/2015/03/my-headach-in-landscape.png><img class="size-full wp-image-683" src=/assets/images/wp-content/uploads/2015/03/my-headach-in-landscape.png alt="my headache in landscape view" width=664 height=379></a><a href=/assets/images/wp-content/uploads/2015/03/autolayout-and-constrains.png><img class="size-full wp-image-688" src=/assets/images/wp-content/uploads/2015/03/autolayout-and-constrains.png alt="autolayout and constrains" width=880 height=783></a><a href=/assets/images/wp-content/uploads/2015/03/snapshortcn.png><img class="size-full wp-image-686" src=/assets/images/wp-content/uploads/2015/03/snapshortcn.png alt="App in my mother tongue " width=416 height=712></a><a href=/assets/images/wp-content/uploads/2015/03/second-version-with-multi-lingo-support.png><img class="size-full wp-image-685" src=/assets/images/wp-content/uploads/2015/03/second-version-with-multi-lingo-support.png alt="second version with multi-lingo support" width=371 height=686></a><div><b>Lesson Learned</b></div><ul><li>Autolayout is such a headache and I spent a lot of time adjusting different devices, landscape and portrait. I had to give up landscape option at the end. I can shift locations, but simply too much to manage the compact height. Next time if the project is easy, perhaps I can quietly sit down and adjust one by one.</li><li>Sketch made the export process like an easy breeze.</li><li>Somehow Xcode can not located the m4a file that I recorded with Quicktime player. Mp3 files are ok. Later I learned that m4a files don’t get automatically copied to Build Resources. Need to add manually.</li><li>In Xcode 6, you can actually export and import XLIFF (<a href=https://en.wikipedia.org/wiki/XLIFF rel=nofollow><a href=https://en.wikipedia.org/wiki/XLIFF>https://en.wikipedia.org/wiki/XLIFF</a></a>) files</li></ul><div></div><div><b>Nice-to-have functions for the future version:</b></div><ul><li>Add right-to-left support // good to have with more complicated layout.</li><li>Show progress when playing the audio</li><li>Add an audio database with different audio samples.</li><li>Users can listen to a group of audio samples in one language</li><li>Allow users randomly submit language audios</li></ul><div></div><div><b>Bug needs fix:</b></div><ul><li>Showing nil when adding additional ViewControllers.</li></ul><div></div><div><strong>Further Reading</strong></div><ul><li>Internationalization and localization of Apps in Xcode 6 and Swift  <a href=http://rshankar.com/internationalization-and-localization-of-apps-in-xcode-6-and-swift/ >http://rshankar.com/internationalization-and-localization-of-apps-in-xcode-6-and-swift/</a></li><li>How to record audio files in Mac: <a href=http://www.mactip.net/how-to-record-sound-on-a-mac/ >http://www.mactip.net/how-to-record-sound-on-a-mac/</a></li></ul><div></div></div><div class=card><div class=page-nav><div><a class=prev href=/2015/03/13/day-1-new-start-angularjs-todo-list-with-material-design/ ><i class="fa fa-angle-left"></i></a> <a class=prev href=/2015/03/13/day-1-new-start-angularjs-todo-list-with-material-design/ >Day 1 &#8211; New Start. AngularJS Todo List with Material Design</a></div><div><a class=next href=/2015/03/17/day-3-a-dribble-client-demo/ >Day 3&#8230; &#8211; A Dribble Client Demo </a><a class=prev href=/2015/03/17/day-3-a-dribble-client-demo/ ><i class="fa fa-angle-right"></i></a></div></div></div><div class="related card"><h2>Related Posts</h2><ul class=related-posts><li><h4><a href=/general/2015/11/11/singles-day/ >Singles Day <small>11 Nov 2015</small></a></h4></li><li><h4><a href=/jekyll/2015/09/27/relocating-my-blog-from-wordpress-to-Jekyll/ >Relocating My Blog from Wordpress to Jekyll <small>27 Sep 2015</small></a></h4></li><li><h4><a href=/2015/07/18/a-design-pattern-story-in-swift-chapter-21-interpretor/ >A Design Pattern Story in Swift – Chapter 21: Interpretor <small>18 Jul 2015</small></a></h4></li></ul></div><div class=card><div id=disqus_thread></div><script type=text/javascript>var disqus_shortname = 'audreyli';
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Day 2 &#8211; iOS App Internationalization &#8211; A Simple Multi-lingo Greeting App</title>
+  <meta name="description" content="I wanted to start something that is related to 3D perspective with Sketch today but somehow I got interested in App Internationalization while watching a lit...">
+  <link rel="canonical" href="http://audreyli.me/2015/03/14/day-2-ios-app-internationalization-a-simple-multi-lingo-greeting-app/">
+  
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=RobotoDraft:100,300,400|Roboto:300,300italic,400">
+  <!-- Boostrap -->
+  <link rel="stylesheet" href="https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/css/bootstrap.css">
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+  
+  <!-- inject:css -->
+  <link rel="stylesheet" href="/assets/stylesheets/style.css">
+  <!-- endinject -->
+
+  <!-- Icons -->
+  <link rel="shortcut icon" href="/assets/favicon.ico">
+  <link rel="apple-touch-icon" sizes="57x57" href="/assets/images/favicons/apple-touch-icon-57x57.png">
+  <link rel="apple-touch-icon" sizes="60x60" href="/assets/images/favicons/apple-touch-icon-60x60.png">
+  <link rel="apple-touch-icon" sizes="72x72" href="/assets/images/favicons/apple-touch-icon-72x72.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="/assets/images/favicons/apple-touch-icon-76x76.png">
+  <link rel="apple-touch-icon" sizes="114x114" href="/assets/images/favicons/apple-touch-icon-114x114.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="/assets/images/favicons/apple-touch-icon-120x120.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="/assets/images/favicons/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="/assets/images/favicons/apple-touch-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/favicons/apple-touch-icon-180x180.png">
+  <link rel="icon" type="image/png" href="/assets/images/favicons/favicon-32x32.png" sizes="32x32">
+
+  <!-- RSS -->
+  <link type="application/atom+xml" rel="alternate" href="http://audreyli.me/feed.xml" title="vidaaudrey-blog" />
+</head>
+
+  
+  <body>
+    <nav id="push_sidebar">
+    <div class="social-icons">
+        <img src="/assets/images/audrey-li.jpg" alt="Audrey's Photo" class="img-circle">
+
+        <a href="https://github.com/vidaaudrey" title="Audrey's Github">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+        <a href="https://www.facebook.com/audreyauli" title="Audrey's Facebook">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-facebook fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+
+        <a href="https://www.linkedin.com/in/audreyauli" title="Audrey's Google Plus">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+        
+        <a href="/assets/images/wechat.jpg" title="Audrey's Wechat">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-weixin fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+
+    </div>
+
+    <ul>
+      <li><a href="/">Home</a></li>
+      <li><a href="/portfolio">Portfolio</a></li>
+      <li><a href="/archives">Archives</a></li>
+      <li><a href="/atom.xml">Feed</a></li>
+      <li class="rss-subscribe">subscribe <a href="feed.xml">via RSS</a></li>
+      <li><a href="/about">About</a></li>
+    </ul>
+</nav>
+
+
+    <div id="body-wrap">
+      <header class="nav-down"  id="wrapper">
+    <div class="container-fluid">
+       <a class="navbar-brand" href="/"><img alt="Brand" src="/assets/images/normal/logo-dark-round.png"></a>
+       <span class="nav_trigger"><i class="fa fa-bars"></i></span>
+    </div>
+</header>
+
+      
+
+<!-- jumbotron for pages -->
+
+<!-- jumbotron for post page, with feature image -->
+  
+     <div class="jumbotron jumbotron-post-long-feature" style="background-image: url('/assets/images/wp-content/uploads/2015/03/snapshortcn-416x675.png')">
+         <div class="fullwidth-wrapper">
+    <div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12 ">
+      <div class="main-wrap">
+           <h2 class="post-title">Day 2 &#8211; iOS App Internationalization &#8211; A Simple Multi-lingo Greeting App</h2>
+            <p class="post-date">14 Mar 2015</p>
+      </div>
+    </div>
+</div>
+      </div>
+
+  <!-- jumbotron for post page, without feature image -->
+  
+
+
+
+
+
+
+      <main class="row">
+          <div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12 ">
+              <div class="main-wrap">
+                <div class="post card post-content">
+   <div>
+  I wanted to start something that is related to 3D perspective with Sketch today but somehow I got interested in App Internationalization while watching a little WWDC video. So I decided to build a simple multi-lingo app to test some ideas.
+</div>
+
+<div>
+</div>
+
+<div>
+  I was excited about the possibilities of the app functions and got really excited. But I am also fully aware of my skills and knowledge level.
+</div>
+
+<div>
+</div>
+
+<div>
+  <div class='et_post_video'>
+  </div>
+</div>
+
+<div>
+  <a href='https://github.com/vidaaudrey/002-Swift-Multilingo-Greeting' class='small-button smallorange'>Source Code</a>
+</div>
+
+<div>
+  <b>Thoughts</b>
+</div>
+
+<ul>
+<li>The App will not be complicated but enough to demonstrate the fundamentals of internationalization</li>
+<li>Greetings in different languages should be fun</li>
+<li>Maybe some audio greeting as well</li>
+<li>There are many others things that I can do, but this is literally my first mini App with Swift. I should just focus on the core value of my project today which is to learn iOS internationalization basics</li>
+</ul>
+
+<div>
+  <b> </b>
+</div>
+
+<div>
+  <b>Objective </b>
+</div>
+
+<ul>
+<li>Learn internationalization of Interface strings, programmatically generated strings, image assets, audio files</li>
+<li>Learn how to handle translation files</li>
+<li>Learn Sketch export to speed up development</li>
+<li>Preview and debug in translated languages</li>
+<li>How to process right-to-left language</li>
+</ul>
+
+<div>
+</div>
+
+<div>
+  <b>Steps</b>
+</div>
+
+<ol>
+<li>A simple design in Sketch</li>
+<li>Setup Github</li>
+<li>Layout Storyboard, put together the basic App in English</li>
+<li>Add localized strings</li>
+<li>Process the translation file. Personally I found <a href="http://xliff.brightec.co.uk/form.php">Brightec.com</a> quite useful and handy. But with this project, it’s not necessary. All strings can be easily added via Xcode.</li>
+<li>Add localized images. Use the “Localized String” approach to localize images. (The asset image does not support localization so well).</li>
+<li>Programmatically switch language and region. First I thought it was too much trouble. Normally users can do it from the system setting. Later I found a solution in Stackoverflow.com which is to  get files from the respective language folders.</li>
+<li>Add localized audio files</li>
+<li>Refine Autolayout to support multiple devices
+
+<ol>
+<li>Other use of NSLocalizedString &amp; best practice  — &gt; check next time</li>
+</ol></li>
+</ol>
+
+<div>
+    <a href="/assets/images/wp-content/uploads/2015/03/sketch-design.png"><img class="size-full wp-image-689" src="/assets/images/wp-content/uploads/2015/03/sketch-design.png" alt="sketch design  (quite different from the final result )" width="750" height="1334" /></a>
+
+    <a href="/assets/images/wp-content/uploads/2015/03/how-nice-sketch-support-folder-export.png"><img class="size-full wp-image-684" src="/assets/images/wp-content/uploads/2015/03/how-nice-sketch-support-folder-export.png" alt="how nice sketch support folder export" width="536" height="681" /></a>
+    
+ 
+  
+    <a href="/assets/images/wp-content/uploads/2015/03/image-assets.png"><img class="size-full wp-image-682" src="/assets/images/wp-content/uploads/2015/03/image-assets.png" alt="Xcode manages image assets very nicely" width="1124" height="796" /></a>
+
+  
+    <a href="/assets/images/wp-content/uploads/2015/03/first-version-in-english.png"><img class="size-full wp-image-687" src="/assets/images/wp-content/uploads/2015/03/first-version-in-english.png" alt="first version in english" width="373" height="690" /></a>
+ 
+  
+    <a href="/assets/images/wp-content/uploads/2015/03/my-headach-in-landscape.png"><img class="size-full wp-image-683" src="/assets/images/wp-content/uploads/2015/03/my-headach-in-landscape.png" alt="my headache in landscape view" width="664" height="379" /></a>
+ 
+  
+    <a href="/assets/images/wp-content/uploads/2015/03/autolayout-and-constrains.png"><img class="size-full wp-image-688" src="/assets/images/wp-content/uploads/2015/03/autolayout-and-constrains.png" alt="autolayout and constrains" width="880" height="783" /></a>
+  
+  
+    <a href="/assets/images/wp-content/uploads/2015/03/snapshortcn.png"><img class="size-full wp-image-686" src="/assets/images/wp-content/uploads/2015/03/snapshortcn.png" alt="App in my mother tongue " width="416" height="712" /></a>
+  
+  
+    <a href="/assets/images/wp-content/uploads/2015/03/second-version-with-multi-lingo-support.png"><img class="size-full wp-image-685" src="/assets/images/wp-content/uploads/2015/03/second-version-with-multi-lingo-support.png" alt="second version with multi-lingo support" width="371" height="686" /></a>
+
+
+<div>
+  <b>Lesson Learned</b>
+</div>
+
+<ul>
+<li>Autolayout is such a headache and I spent a lot of time adjusting different devices, landscape and portrait. I had to give up landscape option at the end. I can shift locations, but simply too much to manage the compact height. Next time if the project is easy, perhaps I can quietly sit down and adjust one by one.</li>
+<li>Sketch made the export process like an easy breeze.</li>
+<li>Somehow Xcode can not located the m4a file that I recorded with Quicktime player. Mp3 files are ok. Later I learned that m4a files don’t get automatically copied to Build Resources. Need to add manually.</li>
+<li>In Xcode 6, you can actually export and import XLIFF (<a href="https://en.wikipedia.org/wiki/XLIFF" rel="nofollow"><a href="https://en.wikipedia.org/wiki/XLIFF">https://en.wikipedia.org/wiki/XLIFF</a></a>) files</li>
+</ul>
+
+<div>
+</div>
+
+<div>
+  <b>Nice-to-have functions for the future version:</b>
+</div>
+
+<ul>
+<li>Add right-to-left support // good to have with more complicated layout.</li>
+<li>Show progress when playing the audio</li>
+<li>Add an audio database with different audio samples.</li>
+<li>Users can listen to a group of audio samples in one language</li>
+<li>Allow users randomly submit language audios</li>
+</ul>
+
+<div>
+</div>
+
+<div>
+  <b>Bug needs fix:</b>
+</div>
+
+<ul>
+<li>Showing nil when adding additional ViewControllers.</li>
+</ul>
+
+<div>
+</div>
+
+<div>
+  <strong>Further Reading </strong>
+</div>
+
+<ul>
+<li>Internationalization and localization of Apps in Xcode 6 and Swift  <a href="http://rshankar.com/internationalization-and-localization-of-apps-in-xcode-6-and-swift/">http://rshankar.com/internationalization-and-localization-of-apps-in-xcode-6-and-swift/</a></li>
+<li>How to record audio files in Mac: <a href="http://www.mactip.net/how-to-record-sound-on-a-mac/">http://www.mactip.net/how-to-record-sound-on-a-mac/</a></li>
+</ul>
+
+<div>
+</div>
+
+ </div>
+ <div class="card">
+   <div class="page-nav">
+    <div>
+        
+         <a class="prev" href="/2015/03/13/day-1-new-start-angularjs-todo-list-with-material-design/"> <i class="fa fa-angle-left"></i></a> 
+          <a class="prev" href="/2015/03/13/day-1-new-start-angularjs-todo-list-with-material-design/"> Day 1 &#8211;  New Start. AngularJS Todo List with Material Design</a>
+        
+    </div>
+    <div>
+        
+          <a class="next" href="/2015/03/17/day-3-a-dribble-client-demo/">Day 3&#8230;  &#8211; A Dribble Client Demo </a>
+         <a class="prev" href="/2015/03/17/day-3-a-dribble-client-demo/"> <i class="fa fa-angle-right"></i></a> 
+        
+    </div>
+</div>
+
+
+
+ </div>
+ <div class="related card">
+   <h2>Related Posts</h2>
+   <ul class="related-posts">
+     
+       <li>
+         <h4>
+           <a href="/general/2015/11/11/singles-day/">
+             Singles Day
+             <small>11 Nov 2015</small>
+           </a>
+         </h4>
+       </li>
+     
+       <li>
+         <h4>
+           <a href="/jekyll/2015/09/27/relocating-my-blog-from-wordpress-to-Jekyll/">
+             Relocating My Blog from Wordpress to Jekyll
+             <small>27 Sep 2015</small>
+           </a>
+         </h4>
+       </li>
+     
+       <li>
+         <h4>
+           <a href="/2015/07/18/a-design-pattern-story-in-swift-chapter-21-interpretor/">
+             A Design Pattern Story in Swift – Chapter 21: Interpretor
+             <small>18 Jul 2015</small>
+           </a>
+         </h4>
+       </li>
+     
+   </ul>
+ </div>
+ <div class="card">
+ <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'audreyli';
     
     (function() {
         var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
         dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
         (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-    })();</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript rel=nofollow>comments powered by Disqus.</a></noscript></div></div></div></div></main><footer class=row><div class="col-md-8 col-md-offset-2 text-center"><a href=http://audreyli.me>&copy; Copyright 2015 &nbsp; &nbsp; AudreyLi.me &nbsp; &nbsp;</a> <a href=/archives>Archives &nbsp; &nbsp; </a><a href=https://github.com/vidaaudrey title="Audrey's Github"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-github fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.linkedin.com/in/audreyauli title="Audrey's Google Plus"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i> </span></a><a href=/feed.xml title="RSS Feed"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-rss fa-stack-1x fa-inverse"></i></span></a></div></footer><script src=https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js></script><script src=https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/js/bootstrap.js></script><script src=/assets/javascript/index.js></script></div><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+ </div>
+ 
+
+      
+    
+
+
+
+
+              </div>
+          </div>
+          
+      </main>
+      <footer class="row">
+    <div class="col-md-8 col-md-offset-2 text-center">
+        <a href="http://audreyli.me">  &copy; Copyright 2015 &nbsp; &nbsp; AudreyLi.me &nbsp; &nbsp;</a> 
+       
+        <a href="/archives">Archives &nbsp; &nbsp; </a>
+        <a href="https://github.com/vidaaudrey" title="Audrey's Github">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+    
+        <a href="https://www.linkedin.com/in/audreyauli" title="Audrey's Google Plus">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+        
+        <a href="/feed.xml" title="RSS Feed">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+    </div>
+    
+</footer>
+
+      
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js"></script>
+<script src="https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/js/bootstrap.js"></script>
+
+<!-- inject:js -->
+<script src="/assets/javascript/index.js"></script>
+<!-- endinject -->
+
+  </div>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
     })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
     ga('create', 'UA-68084914-1', 'auto');
-    ga('send', 'pageview');</script></body></html>
+    ga('send', 'pageview');
+
+  </script>
+  </body>
+</html>

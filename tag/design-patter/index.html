@@ -1,7 +1,171 @@
-<!DOCTYPE html><html xmlns=http://www.w3.org/1999/xhtml xml:lang=en lang=en-us><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><title>Design Patter</title><meta name=description content="Audrey Li's personal blog"><link rel=canonical href=http://audreyli.me/tag/design-patter/ ><link rel=stylesheet href="http://fonts.googleapis.com/css?family=RobotoDraft:100,300,400|Roboto:300,300italic,400"><link rel=stylesheet href=https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/css/bootstrap.css><link rel=stylesheet href=https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css><link rel=stylesheet href=/assets/stylesheets/style-b5460305d5.min.css><link rel="shortcut icon" href=/assets/favicon.ico><link rel=apple-touch-icon sizes=57x57 href=/assets/images/favicons/apple-touch-icon-57x57.png><link rel=apple-touch-icon sizes=60x60 href=/assets/images/favicons/apple-touch-icon-60x60.png><link rel=apple-touch-icon sizes=72x72 href=/assets/images/favicons/apple-touch-icon-72x72.png><link rel=apple-touch-icon sizes=76x76 href=/assets/images/favicons/apple-touch-icon-76x76.png><link rel=apple-touch-icon sizes=114x114 href=/assets/images/favicons/apple-touch-icon-114x114.png><link rel=apple-touch-icon sizes=120x120 href=/assets/images/favicons/apple-touch-icon-120x120.png><link rel=apple-touch-icon sizes=144x144 href=/assets/images/favicons/apple-touch-icon-144x144.png><link rel=apple-touch-icon sizes=152x152 href=/assets/images/favicons/apple-touch-icon-152x152.png><link rel=apple-touch-icon sizes=180x180 href=/assets/images/favicons/apple-touch-icon-180x180.png><link rel=icon type=image/png href=/assets/images/favicons/favicon-32x32.png sizes=32x32><link type=application/atom+xml rel=alternate href=http://audreyli.me/feed.xml title=vidaaudrey-blog></head><body><nav id=push_sidebar><div class=social-icons><img src=/assets/images/audrey-li.jpg alt="Audrey's Photo" class=img-circle> <a href=https://github.com/vidaaudrey title="Audrey's Github"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-github fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.facebook.com/audreyauli title="Audrey's Facebook"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-facebook fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.linkedin.com/in/audreyauli title="Audrey's Google Plus"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i> </span></a><a href=/assets/images/wechat.jpg title="Audrey's Wechat"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-weixin fa-stack-1x fa-inverse"></i></span></a></div><ul><li><a href=/ >Home</a></li><li><a href=/portfolio>Portfolio</a></li><li><a href=/archives>Archives</a></li><li><a href=/atom.xml>Feed</a></li><li class=rss-subscribe>subscribe <a href=feed.xml>via RSS</a></li><li><a href=/about>About</a></li></ul></nav><div id=body-wrap><header class=nav-down id=wrapper><div class=container-fluid><a class=navbar-brand href=/ ><img alt=Brand src=/assets/images/normal/logo-dark-round.png></a><span class=nav_trigger><i class="fa fa-bars"></i></span></div></header><main class=row><div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12"><div class=main-wrap><h1>Archive of posts with tag 'Design Patter'</h1><ul class=posts><li><span class=post-date>Jul 17, 2015</span> <a class=post-link href=/2015/07/17/a-design-pattern-story-in-swift-chapter-19-flyweight/ >A Design Pattern Story in Swift – Chapter 19: Flyweight</a></li></ul></div></div></main><footer class=row><div class="col-md-8 col-md-offset-2 text-center"><a href=http://audreyli.me>&copy; Copyright 2015 &nbsp; &nbsp; AudreyLi.me &nbsp; &nbsp;</a> <a href=/archives>Archives &nbsp; &nbsp; </a><a href=https://github.com/vidaaudrey title="Audrey's Github"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-github fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.linkedin.com/in/audreyauli title="Audrey's Google Plus"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i> </span></a><a href=/feed.xml title="RSS Feed"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-rss fa-stack-1x fa-inverse"></i></span></a></div></footer><script src=https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js></script><script src=https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/js/bootstrap.js></script><script src=/assets/javascript/index.js></script></div><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Design Patter</title>
+  <meta name="description" content="Audrey Li's personal blog">
+  <link rel="canonical" href="http://audreyli.me/tag/design-patter/">
+  
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=RobotoDraft:100,300,400|Roboto:300,300italic,400">
+  <!-- Boostrap -->
+  <link rel="stylesheet" href="https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/css/bootstrap.css">
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+  
+  <!-- inject:css -->
+  <link rel="stylesheet" href="/assets/stylesheets/style.css">
+  <!-- endinject -->
+
+  <!-- Icons -->
+  <link rel="shortcut icon" href="/assets/favicon.ico">
+  <link rel="apple-touch-icon" sizes="57x57" href="/assets/images/favicons/apple-touch-icon-57x57.png">
+  <link rel="apple-touch-icon" sizes="60x60" href="/assets/images/favicons/apple-touch-icon-60x60.png">
+  <link rel="apple-touch-icon" sizes="72x72" href="/assets/images/favicons/apple-touch-icon-72x72.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="/assets/images/favicons/apple-touch-icon-76x76.png">
+  <link rel="apple-touch-icon" sizes="114x114" href="/assets/images/favicons/apple-touch-icon-114x114.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="/assets/images/favicons/apple-touch-icon-120x120.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="/assets/images/favicons/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="/assets/images/favicons/apple-touch-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/favicons/apple-touch-icon-180x180.png">
+  <link rel="icon" type="image/png" href="/assets/images/favicons/favicon-32x32.png" sizes="32x32">
+
+  <!-- RSS -->
+  <link type="application/atom+xml" rel="alternate" href="http://audreyli.me/feed.xml" title="vidaaudrey-blog" />
+</head>
+
+  
+  <body>
+    <nav id="push_sidebar">
+    <div class="social-icons">
+        <img src="/assets/images/audrey-li.jpg" alt="Audrey's Photo" class="img-circle">
+
+        <a href="https://github.com/vidaaudrey" title="Audrey's Github">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+        <a href="https://www.facebook.com/audreyauli" title="Audrey's Facebook">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-facebook fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+
+        <a href="https://www.linkedin.com/in/audreyauli" title="Audrey's Google Plus">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+        
+        <a href="/assets/images/wechat.jpg" title="Audrey's Wechat">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-weixin fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+
+    </div>
+
+    <ul>
+      <li><a href="/">Home</a></li>
+      <li><a href="/portfolio">Portfolio</a></li>
+      <li><a href="/archives">Archives</a></li>
+      <li><a href="/atom.xml">Feed</a></li>
+      <li class="rss-subscribe">subscribe <a href="feed.xml">via RSS</a></li>
+      <li><a href="/about">About</a></li>
+    </ul>
+</nav>
+
+
+    <div id="body-wrap">
+      <header class="nav-down"  id="wrapper">
+    <div class="container-fluid">
+       <a class="navbar-brand" href="/"><img alt="Brand" src="/assets/images/normal/logo-dark-round.png"></a>
+       <span class="nav_trigger"><i class="fa fa-bars"></i></span>
+    </div>
+</header>
+
+      
+
+<!-- jumbotron for pages -->
+
+<!-- jumbotron for pages -->
+<!-- jumbotron for home page -->
+  
+
+
+
+
+      <main class="row">
+          <div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12 ">
+              <div class="main-wrap">
+               <h1>Archive of posts with tag 'Design Patter'</h1>
+<ul class="posts">
+  
+    <li>
+      <span class="post-date">Jul 17, 2015</span>
+      <a class="post-link" href="/2015/07/17/a-design-pattern-story-in-swift-chapter-19-flyweight/">A Design Pattern Story in Swift – Chapter 19: Flyweight</a>
+    </li>
+  
+</ul>
+
+              </div>
+          </div>
+          
+      </main>
+      <footer class="row">
+    <div class="col-md-8 col-md-offset-2 text-center">
+        <a href="http://audreyli.me">  &copy; Copyright 2015 &nbsp; &nbsp; AudreyLi.me &nbsp; &nbsp;</a> 
+       
+        <a href="/archives">Archives &nbsp; &nbsp; </a>
+        <a href="https://github.com/vidaaudrey" title="Audrey's Github">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+    
+        <a href="https://www.linkedin.com/in/audreyauli" title="Audrey's Google Plus">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+        
+        <a href="/feed.xml" title="RSS Feed">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+    </div>
+    
+</footer>
+
+      
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js"></script>
+<script src="https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/js/bootstrap.js"></script>
+
+<!-- inject:js -->
+<script src="/assets/javascript/index.js"></script>
+<!-- endinject -->
+
+  </div>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
     })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
     ga('create', 'UA-68084914-1', 'auto');
-    ga('send', 'pageview');</script></body></html>
+    ga('send', 'pageview');
+
+  </script>
+  </body>
+</html>

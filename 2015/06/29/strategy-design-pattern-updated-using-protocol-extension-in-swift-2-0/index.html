@@ -1,132 +1,394 @@
-<!DOCTYPE html><html xmlns=http://www.w3.org/1999/xhtml xml:lang=en lang=en-us><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><title>Strategy Design Pattern Updated Using Protocol Extension in Swift 2.0</title><meta name=description content="I came across the Protocol-Oriented programming concept recently and I found it quite fascinating, so I decided to rewrite my previous story with protocols a..."><link rel=canonical href=http://audreyli.me/2015/06/29/strategy-design-pattern-updated-using-protocol-extension-in-swift-2-0/ ><link rel=stylesheet href="http://fonts.googleapis.com/css?family=RobotoDraft:100,300,400|Roboto:300,300italic,400"><link rel=stylesheet href=https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/css/bootstrap.css><link rel=stylesheet href=https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css><link rel=stylesheet href=/assets/stylesheets/style-b5460305d5.min.css><link rel="shortcut icon" href=/assets/favicon.ico><link rel=apple-touch-icon sizes=57x57 href=/assets/images/favicons/apple-touch-icon-57x57.png><link rel=apple-touch-icon sizes=60x60 href=/assets/images/favicons/apple-touch-icon-60x60.png><link rel=apple-touch-icon sizes=72x72 href=/assets/images/favicons/apple-touch-icon-72x72.png><link rel=apple-touch-icon sizes=76x76 href=/assets/images/favicons/apple-touch-icon-76x76.png><link rel=apple-touch-icon sizes=114x114 href=/assets/images/favicons/apple-touch-icon-114x114.png><link rel=apple-touch-icon sizes=120x120 href=/assets/images/favicons/apple-touch-icon-120x120.png><link rel=apple-touch-icon sizes=144x144 href=/assets/images/favicons/apple-touch-icon-144x144.png><link rel=apple-touch-icon sizes=152x152 href=/assets/images/favicons/apple-touch-icon-152x152.png><link rel=apple-touch-icon sizes=180x180 href=/assets/images/favicons/apple-touch-icon-180x180.png><link rel=icon type=image/png href=/assets/images/favicons/favicon-32x32.png sizes=32x32><link type=application/atom+xml rel=alternate href=http://audreyli.me/feed.xml title=vidaaudrey-blog></head><body><nav id=push_sidebar><div class=social-icons><img src=/assets/images/audrey-li.jpg alt="Audrey's Photo" class=img-circle> <a href=https://github.com/vidaaudrey title="Audrey's Github"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-github fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.facebook.com/audreyauli title="Audrey's Facebook"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-facebook fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.linkedin.com/in/audreyauli title="Audrey's Google Plus"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i> </span></a><a href=/assets/images/wechat.jpg title="Audrey's Wechat"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-weixin fa-stack-1x fa-inverse"></i></span></a></div><ul><li><a href=/ >Home</a></li><li><a href=/portfolio>Portfolio</a></li><li><a href=/archives>Archives</a></li><li><a href=/atom.xml>Feed</a></li><li class=rss-subscribe>subscribe <a href=feed.xml>via RSS</a></li><li><a href=/about>About</a></li></ul></nav><div id=body-wrap><header class=nav-down id=wrapper><div class=container-fluid><a class=navbar-brand href=/ ><img alt=Brand src=/assets/images/normal/logo-dark-round.png></a><span class=nav_trigger><i class="fa fa-bars"></i></span></div></header><div class="jumbotron jumbotron-post" style="background-image: url('/assets/images/wp-content/uploads/2015/06/Strategy-Pattern-in-Swift-2.0.png')"><div class=fullwidth-wrapper><div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12"><div class=main-wrap><h2 class=post-title>Strategy Design Pattern Updated Using Protocol Extension in Swift 2.0</h2><p class=post-date>29 Jun 2015</p></div></div></div></div><main class=row><div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12"><div class=main-wrap><div class="post card post-content"><p>I came across the Protocol-Oriented programming concept recently and I found it quite fascinating, so I decided to rewrite my previous story with protocols and value-based approaches.</p><p>The first thing I need to do is layout all the requirements:</p><ul><li>I want to model all the creatures in the world including animals and plants.</li><li>Basically all creatures have names. The difference between animals and plants is whether they can move, generally speaking.</li><li>All the moving animals have their own &#8216;Escape Strategy&#8217;. But how do they execute their strategies varies.</li></ul><figure class=highlight><pre><code class=language-swift data-lang=swift>  <span class=c1>//: Create the base protocol &#39;Creature&#39;</span>
-<span class=n>public</span> <span class=k>protocol</span> <span class=nl>Creature</span><span class=p>:</span> <span class=n>CustomStringConvertible</span> <span class=p>{</span>
-    <span class=k>static</span> <span class=k>var</span> <span class=nl>entityName</span><span class=p>:</span> <span class=n>String</span> <span class=p>{</span> <span class=kr>get</span> <span class=p>}</span>
-    <span class=k>var</span> <span class=nl>name</span><span class=p>:</span> <span class=n>String</span> <span class=p>{</span> <span class=kr>get</span> <span class=p>}</span>
-    <span class=k>var</span> <span class=nl>canMove</span><span class=p>:</span> <span class=n>Bool</span> <span class=p>{</span> <span class=kr>get</span> <span class=p>}</span>
-<span class=p>}</span>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<span class=c1>//: Protocol &#39;Animal&#39; inherit from &#39;Creature&#39; protocol and it has a &#39;escapeStrategy&#39;, can &#39;performEscape&#39;</span>
-<span class=n>public</span> <span class=k>protocol</span> <span class=nl>Animal</span><span class=p>:</span> <span class=n>Creature</span> <span class=p>{</span>
-    <span class=k>var</span> <span class=nl>escapeStrategy</span><span class=p>:</span> <span class=n>EscapeStrategy</span> <span class=p>{</span> <span class=kr>get</span> <span class=p>}</span>
-    <span class=k>func</span> <span class=n>performEscape</span><span class=p>()</span>
-<span class=p>}</span>
-<span class=c1>//: &#39;Plant&#39; also conforms to &#39;Creature&#39; protocol</span>
-<span class=n>public</span> <span class=k>protocol</span> <span class=nl>Plant</span><span class=p>:</span> <span class=n>Creature</span> <span class=p>{</span>
-<span class=p>}</span>
+  <title>Strategy Design Pattern Updated Using Protocol Extension in Swift 2.0</title>
+  <meta name="description" content="I came across the Protocol-Oriented programming concept recently and I found it quite fascinating, so I decided to rewrite my previous story with protocols a...">
+  <link rel="canonical" href="http://audreyli.me/2015/06/29/strategy-design-pattern-updated-using-protocol-extension-in-swift-2-0/">
+  
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=RobotoDraft:100,300,400|Roboto:300,300italic,400">
+  <!-- Boostrap -->
+  <link rel="stylesheet" href="https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/css/bootstrap.css">
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+  
+  <!-- inject:css -->
+  <link rel="stylesheet" href="/assets/stylesheets/style.css">
+  <!-- endinject -->
 
-<span class=c1>//: It&#39;s a wonder that we can actually extend a protocol and have it carry out the default implementation of other protocols. This case, all animals can &#39;performEscape&#39;</span>
-<span class=k>extension</span> <span class=n>Animal</span> <span class=p>{</span>
-    <span class=n>public</span> <span class=k>func</span> <span class=n>performEscape</span><span class=p>(){</span>
-        <span class=n>print</span><span class=p>(</span><span class=s>&quot;\(name) about to execute a Escape Plan&quot;</span><span class=p>)</span>
-        <span class=n>escapeStrategy</span><span class=p>.</span><span class=n>executeEscapePlan</span><span class=p>()</span>
-        <span class=n>print</span><span class=p>(</span><span class=s>&quot;\(name) successfully escaped&quot;</span><span class=p>)</span>
-    <span class=p>}</span>
-<span class=p>}</span>
+  <!-- Icons -->
+  <link rel="shortcut icon" href="/assets/favicon.ico">
+  <link rel="apple-touch-icon" sizes="57x57" href="/assets/images/favicons/apple-touch-icon-57x57.png">
+  <link rel="apple-touch-icon" sizes="60x60" href="/assets/images/favicons/apple-touch-icon-60x60.png">
+  <link rel="apple-touch-icon" sizes="72x72" href="/assets/images/favicons/apple-touch-icon-72x72.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="/assets/images/favicons/apple-touch-icon-76x76.png">
+  <link rel="apple-touch-icon" sizes="114x114" href="/assets/images/favicons/apple-touch-icon-114x114.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="/assets/images/favicons/apple-touch-icon-120x120.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="/assets/images/favicons/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="/assets/images/favicons/apple-touch-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/favicons/apple-touch-icon-180x180.png">
+  <link rel="icon" type="image/png" href="/assets/images/favicons/favicon-32x32.png" sizes="32x32">
 
-<span class=c1>//: Here is the key. All animals have &#39;EscapeStrategy&#39;, but how they implement will be different. Have a protocol enables the runtime execution to be different</span>
-<span class=n>public</span> <span class=k>protocol</span> <span class=n>EscapeStrategy</span> <span class=p>{</span>
-    <span class=k>func</span> <span class=n>executeEscapePlan</span><span class=p>()</span>
-<span class=p>}</span>
+  <!-- RSS -->
+  <link type="application/atom+xml" rel="alternate" href="http://audreyli.me/feed.xml" title="vidaaudrey-blog" />
+</head>
 
-<span class=n>public</span> <span class=k>class</span> <span class=nl>EscapeByFlying</span><span class=p>:</span> <span class=n>EscapeStrategy</span> <span class=p>{</span>
-    <span class=n>public</span> <span class=k>func</span> <span class=n>executeEscapePlan</span><span class=p>()</span> <span class=p>{</span>
-        <span class=n>print</span><span class=p>(</span><span class=s>&quot;Escape by flying&quot;</span><span class=p>)</span>
-    <span class=p>}</span>
-     <span class=n>public</span> <span class=k>init</span><span class=p>()</span> <span class=p>{}</span>
-<span class=p>}</span>
+  
+  <body>
+    <nav id="push_sidebar">
+    <div class="social-icons">
+        <img src="/assets/images/audrey-li.jpg" alt="Audrey's Photo" class="img-circle">
 
-<span class=n>public</span> <span class=k>class</span> <span class=nl>EscapeByRunning</span><span class=p>:</span> <span class=n>EscapeStrategy</span> <span class=p>{</span>
-   <span class=n>public</span> <span class=k>func</span> <span class=n>executeEscapePlan</span><span class=p>()</span> <span class=p>{</span>
-        <span class=n>print</span><span class=p>(</span><span class=s>&quot;Escape by running&quot;</span><span class=p>)</span>
-    <span class=p>}</span>
-    <span class=n>public</span> <span class=k>init</span><span class=p>()</span> <span class=p>{}</span>
-<span class=p>}</span>
-<span class=n>public</span> <span class=k>class</span> <span class=nl>EscapeByOther</span><span class=p>:</span> <span class=n>EscapeStrategy</span> <span class=p>{</span>
-   <span class=n>public</span> <span class=k>func</span> <span class=n>executeEscapePlan</span><span class=p>()</span> <span class=p>{</span>
-        <span class=n>print</span><span class=p>(</span><span class=s>&quot;Mysteriously escape&quot;</span><span class=p>)</span>
-    <span class=p>}</span>
-     <span class=n>public</span> <span class=k>init</span><span class=p>()</span> <span class=p>{}</span>
-<span class=p>}</span>
+        <a href="https://github.com/vidaaudrey" title="Audrey's Github">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+        <a href="https://www.facebook.com/audreyauli" title="Audrey's Facebook">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-facebook fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
 
-<span class=c1>//: All animals can move</span>
-<span class=k>extension</span> <span class=n>Moveable</span> <span class=k>where</span> <span class=nl>Self</span><span class=p>:</span> <span class=n>Animal</span> <span class=p>{</span>
-    <span class=n>public</span> <span class=k>var</span> <span class=nl>canMove</span><span class=p>:</span> <span class=n>Bool</span> <span class=p>{</span> <span class=k>return</span> <span class=nb>true</span> <span class=p>}</span>
-<span class=p>}</span></code></pre></figure><p>&nbsp;</p><p>The next step is to write some concrete struct / class to actually conform to the protocols. The power of protocol inheritance and composition makes it quite easy and flexible to do so.</p><figure class=highlight><pre><code class=language-swift data-lang=swift><span class=c1>//: Cat</span>
-<span class=n>public</span> <span class=k>struct</span> <span class=nl>Cat</span><span class=p>:</span> <span class=n>Animal</span><span class=p>,</span> <span class=n>Moveable</span> <span class=p>{</span>
-    <span class=n>public</span> <span class=k>static</span> <span class=k>var</span> <span class=nl>entityName</span><span class=p>:</span> <span class=n>String</span> <span class=p>{</span> <span class=k>return</span> <span class=s>&quot;Cat&quot;</span> <span class=p>}</span>
-    <span class=n>public</span> <span class=k>var</span> <span class=nl>name</span><span class=p>:</span> <span class=n>String</span>
+        <a href="https://www.linkedin.com/in/audreyauli" title="Audrey's Google Plus">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+        
+        <a href="/assets/images/wechat.jpg" title="Audrey's Wechat">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-weixin fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+
+    </div>
+
+    <ul>
+      <li><a href="/">Home</a></li>
+      <li><a href="/portfolio">Portfolio</a></li>
+      <li><a href="/archives">Archives</a></li>
+      <li><a href="/atom.xml">Feed</a></li>
+      <li class="rss-subscribe">subscribe <a href="feed.xml">via RSS</a></li>
+      <li><a href="/about">About</a></li>
+    </ul>
+</nav>
+
+
+    <div id="body-wrap">
+      <header class="nav-down"  id="wrapper">
+    <div class="container-fluid">
+       <a class="navbar-brand" href="/"><img alt="Brand" src="/assets/images/normal/logo-dark-round.png"></a>
+       <span class="nav_trigger"><i class="fa fa-bars"></i></span>
+    </div>
+</header>
+
+      
+
+<!-- jumbotron for pages -->
+
+<!-- jumbotron for post page, with feature image -->
+  
+      <div class="jumbotron jumbotron-post" style="background-image: url('/assets/images/wp-content/uploads/2015/06/Strategy-Pattern-in-Swift-2.0.png')">
+         <div class="fullwidth-wrapper">
+    <div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12 ">
+      <div class="main-wrap">
+           <h2 class="post-title">Strategy Design Pattern Updated Using Protocol Extension in Swift 2.0</h2>
+            <p class="post-date">29 Jun 2015</p>
+      </div>
+    </div>
+</div>
+        
+      </div>
+
+  <!-- jumbotron for post page, without feature image -->
+  
+
+
+
+
+
+
+      <main class="row">
+          <div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12 ">
+              <div class="main-wrap">
+                <div class="post card post-content">
+   <p>I came across the Protocol-Oriented programming concept recently and I found it quite fascinating, so I decided to rewrite my previous story with protocols and value-based approaches.</p>
+
+<p>The first thing I need to do is layout all the requirements:</p>
+
+<ul>
+<li>I want to model all the creatures in the world including animals and plants.</li>
+<li>Basically all creatures have names. The difference between animals and plants is whether they can move, generally speaking.</li>
+<li>All the moving animals have their own &#8216;Escape Strategy&#8217;. But how do they execute their strategies varies.</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-swift" data-lang="swift">  <span class="c1">//: Create the base protocol &#39;Creature&#39;</span>
+<span class="n">public</span> <span class="k">protocol</span> <span class="nl">Creature</span><span class="p">:</span> <span class="n">CustomStringConvertible</span> <span class="p">{</span>
+    <span class="k">static</span> <span class="k">var</span> <span class="nl">entityName</span><span class="p">:</span> <span class="n">String</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
+    <span class="k">var</span> <span class="nl">name</span><span class="p">:</span> <span class="n">String</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
+    <span class="k">var</span> <span class="nl">canMove</span><span class="p">:</span> <span class="n">Bool</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">//: Protocol &#39;Animal&#39; inherit from &#39;Creature&#39; protocol and it has a &#39;escapeStrategy&#39;, can &#39;performEscape&#39;</span>
+<span class="n">public</span> <span class="k">protocol</span> <span class="nl">Animal</span><span class="p">:</span> <span class="n">Creature</span> <span class="p">{</span>
+    <span class="k">var</span> <span class="nl">escapeStrategy</span><span class="p">:</span> <span class="n">EscapeStrategy</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
+    <span class="k">func</span> <span class="n">performEscape</span><span class="p">()</span>
+<span class="p">}</span>
+<span class="c1">//: &#39;Plant&#39; also conforms to &#39;Creature&#39; protocol</span>
+<span class="n">public</span> <span class="k">protocol</span> <span class="nl">Plant</span><span class="p">:</span> <span class="n">Creature</span> <span class="p">{</span>
+<span class="p">}</span>
+
+<span class="c1">//: It&#39;s a wonder that we can actually extend a protocol and have it carry out the default implementation of other protocols. This case, all animals can &#39;performEscape&#39;</span>
+<span class="k">extension</span> <span class="n">Animal</span> <span class="p">{</span>
+    <span class="n">public</span> <span class="k">func</span> <span class="n">performEscape</span><span class="p">(){</span>
+        <span class="n">print</span><span class="p">(</span><span class="s">&quot;\(name) about to execute a Escape Plan&quot;</span><span class="p">)</span>
+        <span class="n">escapeStrategy</span><span class="p">.</span><span class="n">executeEscapePlan</span><span class="p">()</span>
+        <span class="n">print</span><span class="p">(</span><span class="s">&quot;\(name) successfully escaped&quot;</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">//: Here is the key. All animals have &#39;EscapeStrategy&#39;, but how they implement will be different. Have a protocol enables the runtime execution to be different</span>
+<span class="n">public</span> <span class="k">protocol</span> <span class="n">EscapeStrategy</span> <span class="p">{</span>
+    <span class="k">func</span> <span class="n">executeEscapePlan</span><span class="p">()</span>
+<span class="p">}</span>
+
+<span class="n">public</span> <span class="k">class</span> <span class="nl">EscapeByFlying</span><span class="p">:</span> <span class="n">EscapeStrategy</span> <span class="p">{</span>
+    <span class="n">public</span> <span class="k">func</span> <span class="n">executeEscapePlan</span><span class="p">()</span> <span class="p">{</span>
+        <span class="n">print</span><span class="p">(</span><span class="s">&quot;Escape by flying&quot;</span><span class="p">)</span>
+    <span class="p">}</span>
+     <span class="n">public</span> <span class="k">init</span><span class="p">()</span> <span class="p">{}</span>
+<span class="p">}</span>
+
+<span class="n">public</span> <span class="k">class</span> <span class="nl">EscapeByRunning</span><span class="p">:</span> <span class="n">EscapeStrategy</span> <span class="p">{</span>
+   <span class="n">public</span> <span class="k">func</span> <span class="n">executeEscapePlan</span><span class="p">()</span> <span class="p">{</span>
+        <span class="n">print</span><span class="p">(</span><span class="s">&quot;Escape by running&quot;</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="n">public</span> <span class="k">init</span><span class="p">()</span> <span class="p">{}</span>
+<span class="p">}</span>
+<span class="n">public</span> <span class="k">class</span> <span class="nl">EscapeByOther</span><span class="p">:</span> <span class="n">EscapeStrategy</span> <span class="p">{</span>
+   <span class="n">public</span> <span class="k">func</span> <span class="n">executeEscapePlan</span><span class="p">()</span> <span class="p">{</span>
+        <span class="n">print</span><span class="p">(</span><span class="s">&quot;Mysteriously escape&quot;</span><span class="p">)</span>
+    <span class="p">}</span>
+     <span class="n">public</span> <span class="k">init</span><span class="p">()</span> <span class="p">{}</span>
+<span class="p">}</span>
+
+<span class="c1">//: All animals can move</span>
+<span class="k">extension</span> <span class="n">Moveable</span> <span class="k">where</span> <span class="nl">Self</span><span class="p">:</span> <span class="n">Animal</span> <span class="p">{</span>
+    <span class="n">public</span> <span class="k">var</span> <span class="nl">canMove</span><span class="p">:</span> <span class="n">Bool</span> <span class="p">{</span> <span class="k">return</span> <span class="nb">true</span> <span class="p">}</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>&nbsp;</p>
+
+<p>The next step is to write some concrete struct / class to actually conform to the protocols. The power of protocol inheritance and composition makes it quite easy and flexible to do so.</p>
+
+<figure class="highlight"><pre><code class="language-swift" data-lang="swift"><span class="c1">//: Cat</span>
+<span class="n">public</span> <span class="k">struct</span> <span class="nl">Cat</span><span class="p">:</span> <span class="n">Animal</span><span class="p">,</span> <span class="n">Moveable</span> <span class="p">{</span>
+    <span class="n">public</span> <span class="k">static</span> <span class="k">var</span> <span class="nl">entityName</span><span class="p">:</span> <span class="n">String</span> <span class="p">{</span> <span class="k">return</span> <span class="s">&quot;Cat&quot;</span> <span class="p">}</span>
+    <span class="n">public</span> <span class="k">var</span> <span class="nl">name</span><span class="p">:</span> <span class="n">String</span>
     
-    <span class=n>public</span> <span class=k>static</span> <span class=k>func</span> <span class=n>randomMove</span><span class=p>()</span> <span class=p>{</span> <span class=n>print</span><span class=p>(</span><span class=s>&quot;I am moving randomly&quot;</span><span class=p>)</span> <span class=p>}</span>
-    <span class=n>public</span> <span class=k>var</span> <span class=n>movingSpeed</span> <span class=o>=</span> <span class=mf>12.1</span>
+    <span class="n">public</span> <span class="k">static</span> <span class="k">func</span> <span class="n">randomMove</span><span class="p">()</span> <span class="p">{</span> <span class="n">print</span><span class="p">(</span><span class="s">&quot;I am moving randomly&quot;</span><span class="p">)</span> <span class="p">}</span>
+    <span class="n">public</span> <span class="k">var</span> <span class="n">movingSpeed</span> <span class="o">=</span> <span class="mf">12.1</span>
     
-    <span class=n>public</span> <span class=k>var</span> <span class=nl>escapeStrategy</span><span class=p>:</span> <span class=n>EscapeStrategy</span>
+    <span class="n">public</span> <span class="k">var</span> <span class="nl">escapeStrategy</span><span class="p">:</span> <span class="n">EscapeStrategy</span>
     
-    <span class=n>public</span> <span class=k>init</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=n>String</span><span class=p>,</span> <span class=nl>movingSpeed</span><span class=p>:</span> <span class=n>Double</span><span class=p>,</span> <span class=nl>escapeStrategy</span><span class=p>:</span> <span class=n>EscapeStrategy</span><span class=p>){</span>
-        <span class=nb>self</span><span class=p>.</span><span class=n>name</span> <span class=o>=</span> <span class=n>name</span>
-        <span class=nb>self</span><span class=p>.</span><span class=n>movingSpeed</span> <span class=o>=</span> <span class=n>movingSpeed</span>
-        <span class=nb>self</span><span class=p>.</span><span class=n>escapeStrategy</span> <span class=o>=</span> <span class=n>escapeStrategy</span>
-    <span class=p>}</span>
+    <span class="n">public</span> <span class="k">init</span><span class="p">(</span><span class="nl">name</span><span class="p">:</span> <span class="n">String</span><span class="p">,</span> <span class="nl">movingSpeed</span><span class="p">:</span> <span class="n">Double</span><span class="p">,</span> <span class="nl">escapeStrategy</span><span class="p">:</span> <span class="n">EscapeStrategy</span><span class="p">){</span>
+        <span class="nb">self</span><span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="nb">self</span><span class="p">.</span><span class="n">movingSpeed</span> <span class="o">=</span> <span class="n">movingSpeed</span>
+        <span class="nb">self</span><span class="p">.</span><span class="n">escapeStrategy</span> <span class="o">=</span> <span class="n">escapeStrategy</span>
+    <span class="p">}</span>
     
-<span class=p>}</span>
-<span class=c1>//:Rose</span>
-<span class=n>public</span> <span class=k>struct</span> <span class=nl>Rose</span><span class=p>:</span> <span class=n>Plant</span> <span class=p>{</span>
-    <span class=n>public</span> <span class=k>static</span> <span class=k>var</span> <span class=nl>entityName</span><span class=p>:</span> <span class=n>String</span> <span class=p>{</span> <span class=k>return</span> <span class=s>&quot;Rose&quot;</span> <span class=p>}</span>
-    <span class=n>public</span> <span class=k>var</span> <span class=nl>name</span><span class=p>:</span> <span class=n>String</span>
-    <span class=n>public</span> <span class=k>var</span> <span class=nl>canMove</span><span class=p>:</span> <span class=n>Bool</span> <span class=p>{</span> <span class=k>return</span> <span class=nb>false</span> <span class=p>}</span>
+<span class="p">}</span>
+<span class="c1">//:Rose</span>
+<span class="n">public</span> <span class="k">struct</span> <span class="nl">Rose</span><span class="p">:</span> <span class="n">Plant</span> <span class="p">{</span>
+    <span class="n">public</span> <span class="k">static</span> <span class="k">var</span> <span class="nl">entityName</span><span class="p">:</span> <span class="n">String</span> <span class="p">{</span> <span class="k">return</span> <span class="s">&quot;Rose&quot;</span> <span class="p">}</span>
+    <span class="n">public</span> <span class="k">var</span> <span class="nl">name</span><span class="p">:</span> <span class="n">String</span>
+    <span class="n">public</span> <span class="k">var</span> <span class="nl">canMove</span><span class="p">:</span> <span class="n">Bool</span> <span class="p">{</span> <span class="k">return</span> <span class="nb">false</span> <span class="p">}</span>
     
-    <span class=n>public</span> <span class=k>init</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=n>String</span><span class=p>){</span>
-        <span class=nb>self</span><span class=p>.</span><span class=n>name</span> <span class=o>=</span> <span class=n>name</span>
-    <span class=p>}</span>
-<span class=p>}</span>
+    <span class="n">public</span> <span class="k">init</span><span class="p">(</span><span class="nl">name</span><span class="p">:</span> <span class="n">String</span><span class="p">){</span>
+        <span class="nb">self</span><span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 
 
-<span class=n>public</span> <span class=k>protocol</span> <span class=n>Aged</span> <span class=p>{</span>
-    <span class=k>var</span> <span class=nl>age</span><span class=p>:</span> <span class=n>Int</span> <span class=p>{</span> <span class=kr>get</span> <span class=p>}</span>
-<span class=p>}</span>
+<span class="n">public</span> <span class="k">protocol</span> <span class="n">Aged</span> <span class="p">{</span>
+    <span class="k">var</span> <span class="nl">age</span><span class="p">:</span> <span class="n">Int</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
+<span class="p">}</span>
 
-<span class=n>public</span> <span class=k>protocol</span> <span class=n>FullyNamed</span> <span class=p>{</span>
-    <span class=k>var</span> <span class=nl>fullName</span><span class=p>:</span> <span class=n>String</span> <span class=p>{</span> <span class=kr>get</span> <span class=p>}</span>
-<span class=p>}</span>
-<span class=c1>//: &#39;Person&#39; also confirms to &#39;Animal&#39; protocol </span>
-<span class=n>public</span> <span class=k>struct</span> <span class=nl>Person</span><span class=p>:</span> <span class=n>Animal</span><span class=p>,</span> <span class=n>FullyNamed</span><span class=p>,</span> <span class=n>Moveable</span><span class=p>,</span> <span class=n>Aged</span> <span class=p>{</span>
-    <span class=n>public</span> <span class=k>static</span> <span class=k>var</span> <span class=nl>entityName</span><span class=p>:</span> <span class=n>String</span> <span class=p>{</span> <span class=k>return</span> <span class=s>&quot;Person&quot;</span> <span class=p>}</span>
-    <span class=n>public</span> <span class=k>var</span> <span class=nl>name</span><span class=p>:</span> <span class=n>String</span>
+<span class="n">public</span> <span class="k">protocol</span> <span class="n">FullyNamed</span> <span class="p">{</span>
+    <span class="k">var</span> <span class="nl">fullName</span><span class="p">:</span> <span class="n">String</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
+<span class="p">}</span>
+<span class="c1">//: &#39;Person&#39; also confirms to &#39;Animal&#39; protocol </span>
+<span class="n">public</span> <span class="k">struct</span> <span class="nl">Person</span><span class="p">:</span> <span class="n">Animal</span><span class="p">,</span> <span class="n">FullyNamed</span><span class="p">,</span> <span class="n">Moveable</span><span class="p">,</span> <span class="n">Aged</span> <span class="p">{</span>
+    <span class="n">public</span> <span class="k">static</span> <span class="k">var</span> <span class="nl">entityName</span><span class="p">:</span> <span class="n">String</span> <span class="p">{</span> <span class="k">return</span> <span class="s">&quot;Person&quot;</span> <span class="p">}</span>
+    <span class="n">public</span> <span class="k">var</span> <span class="nl">name</span><span class="p">:</span> <span class="n">String</span>
     
-    <span class=n>public</span> <span class=k>var</span> <span class=nl>fullName</span><span class=p>:</span> <span class=n>String</span>
+    <span class="n">public</span> <span class="k">var</span> <span class="nl">fullName</span><span class="p">:</span> <span class="n">String</span>
     
-    <span class=n>public</span> <span class=k>static</span> <span class=k>func</span> <span class=n>randomMove</span><span class=p>()</span> <span class=p>{</span> <span class=n>print</span><span class=p>(</span><span class=s>&quot;I am moving randomly&quot;</span><span class=p>)</span> <span class=p>}</span>
-    <span class=n>public</span> <span class=k>var</span> <span class=n>movingSpeed</span> <span class=o>=</span> <span class=mf>15.1</span>
+    <span class="n">public</span> <span class="k">static</span> <span class="k">func</span> <span class="n">randomMove</span><span class="p">()</span> <span class="p">{</span> <span class="n">print</span><span class="p">(</span><span class="s">&quot;I am moving randomly&quot;</span><span class="p">)</span> <span class="p">}</span>
+    <span class="n">public</span> <span class="k">var</span> <span class="n">movingSpeed</span> <span class="o">=</span> <span class="mf">15.1</span>
     
-    <span class=n>public</span> <span class=k>var</span> <span class=nl>age</span><span class=p>:</span> <span class=n>Int</span> <span class=p>{</span> <span class=k>return</span> <span class=mi>20</span> <span class=p>}</span>
+    <span class="n">public</span> <span class="k">var</span> <span class="nl">age</span><span class="p">:</span> <span class="n">Int</span> <span class="p">{</span> <span class="k">return</span> <span class="mi">20</span> <span class="p">}</span>
     
-    <span class=n>public</span> <span class=k>var</span> <span class=nl>escapeStrategy</span><span class=p>:</span> <span class=n>EscapeStrategy</span>
+    <span class="n">public</span> <span class="k">var</span> <span class="nl">escapeStrategy</span><span class="p">:</span> <span class="n">EscapeStrategy</span>
     
-    <span class=n>public</span> <span class=k>init</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=n>String</span><span class=p>,</span> <span class=nl>fullName</span><span class=p>:</span><span class=n>String</span><span class=p>,</span>  <span class=nl>movingSpeed</span><span class=p>:</span> <span class=n>Double</span><span class=p>,</span> <span class=nl>escapeStrategy</span><span class=p>:</span> <span class=n>EscapeStrategy</span><span class=p>){</span>
-        <span class=nb>self</span><span class=p>.</span><span class=n>name</span> <span class=o>=</span> <span class=n>name</span>
-        <span class=nb>self</span><span class=p>.</span><span class=n>fullName</span> <span class=o>=</span> <span class=n>fullName</span>
-        <span class=nb>self</span><span class=p>.</span><span class=n>movingSpeed</span> <span class=o>=</span> <span class=n>movingSpeed</span>
-        <span class=nb>self</span><span class=p>.</span><span class=n>escapeStrategy</span> <span class=o>=</span> <span class=n>escapeStrategy</span>
-    <span class=p>}</span>
-<span class=p>}</span>
+    <span class="n">public</span> <span class="k">init</span><span class="p">(</span><span class="nl">name</span><span class="p">:</span> <span class="n">String</span><span class="p">,</span> <span class="nl">fullName</span><span class="p">:</span><span class="n">String</span><span class="p">,</span>  <span class="nl">movingSpeed</span><span class="p">:</span> <span class="n">Double</span><span class="p">,</span> <span class="nl">escapeStrategy</span><span class="p">:</span> <span class="n">EscapeStrategy</span><span class="p">){</span>
+        <span class="nb">self</span><span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="nb">self</span><span class="p">.</span><span class="n">fullName</span> <span class="o">=</span> <span class="n">fullName</span>
+        <span class="nb">self</span><span class="p">.</span><span class="n">movingSpeed</span> <span class="o">=</span> <span class="n">movingSpeed</span>
+        <span class="nb">self</span><span class="p">.</span><span class="n">escapeStrategy</span> <span class="o">=</span> <span class="n">escapeStrategy</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 
-<span class=c1>//: protocol composition </span>
-<span class=n>public</span> <span class=k>func</span> <span class=n>showCreatureAge</span><span class=p>(</span><span class=nl>creature</span><span class=p>:</span> <span class=k>protocol</span> <span class=o>&amp;</span><span class=n>lt</span><span class=p>;</span><span class=n>Creature</span><span class=p>,</span> <span class=n>Aged</span><span class=o>&gt;</span><span class=p>)</span> <span class=p>{</span>
-    <span class=n>print</span><span class=p>(</span><span class=s>&quot;\(creature.name) is \(creature.age) years</span><span class=se>\&#39;</span><span class=s> old&quot;</span><span class=p>)</span>
-<span class=p>}</span></code></pre></figure><p>Finally test the code:</p><figure class=highlight><pre><code class=language-swift data-lang=swift><span class=k>var</span> <span class=n>rose</span> <span class=o>=</span> <span class=n>Rose</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=s>&quot;Pretty Rose Flower&quot;</span><span class=p>)</span>
-<span class=k>var</span> <span class=n>person</span> <span class=o>=</span> <span class=n>Person</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=s>&quot;Mia&quot;</span><span class=p>,</span> <span class=nl>fullName</span><span class=p>:</span> <span class=s>&quot;Mia Zhu&quot;</span><span class=p>,</span> <span class=nl>movingSpeed</span><span class=p>:</span> <span class=mi>2121</span><span class=p>,</span> <span class=nl>escapeStrategy</span><span class=p>:</span> <span class=n>EscapeByFlying</span><span class=p>()</span> <span class=p>)</span>
-<span class=k>var</span> <span class=n>cat</span> <span class=o>=</span> <span class=n>Cat</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=s>&quot;Kitty&quot;</span><span class=p>,</span> <span class=nl>movingSpeed</span><span class=p>:</span> <span class=mi>10</span><span class=p>,</span> <span class=nl>escapeStrategy</span><span class=p>:</span> <span class=n>EscapeByRunning</span><span class=p>())</span>
+<span class="c1">//: protocol composition </span>
+<span class="n">public</span> <span class="k">func</span> <span class="n">showCreatureAge</span><span class="p">(</span><span class="nl">creature</span><span class="p">:</span> <span class="k">protocol</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">Creature</span><span class="p">,</span> <span class="n">Aged</span><span class="o">&gt;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">print</span><span class="p">(</span><span class="s">&quot;\(creature.name) is \(creature.age) years</span><span class="se">\&#39;</span><span class="s"> old&quot;</span><span class="p">)</span>
+<span class="p">}</span></code></pre></figure>
 
-<span class=k>var</span> <span class=nl>creatures</span><span class=p>:[</span><span class=n>Creature</span><span class=p>]</span> <span class=o>=</span> <span class=p>[</span><span class=n>cat</span><span class=p>,</span> <span class=n>rose</span><span class=p>,</span> <span class=n>person</span><span class=p>]</span>
-<span class=n>creatures</span><span class=p>.</span><span class=n>filter</span> <span class=p>{</span> <span class=err>$</span><span class=mi>0</span> <span class=kt>is</span> <span class=n>Animal</span><span class=p>}.</span><span class=n>map</span><span class=p>{</span> <span class=p>(</span><span class=err>$</span><span class=mi>0</span> <span class=kt>as</span><span class=o>!</span> <span class=n>Animal</span><span class=p>).</span><span class=n>performEscape</span><span class=p>()}</span></code></pre></figure><p><a href=/assets/images/wp-content/uploads/2015/06/Strategy-Pattern-in-Swift-2.0.png><img class="size-full wp-image-957 aligncenter" src=/assets/images/wp-content/uploads/2015/06/Strategy-Pattern-in-Swift-2.0.png alt="Strategy Pattern in Swift 2.0" width=305 height=119></a></p></div><div class=card><div class=page-nav><div><a class=prev href=/2015/06/29/a-design-pattern-story-in-swift-chapter-two-observer/ ><i class="fa fa-angle-left"></i></a> <a class=prev href=/2015/06/29/a-design-pattern-story-in-swift-chapter-two-observer/ >A Design Pattern Story in Swift &#8211; Chapter 2: Observer</a></div><div><a class=next href=/2015/06/30/a-design-pattern-in-swift-chapter-3-decorator/ >A Design Pattern Story in Swift &#8211; Chapter 3: Decorator </a><a class=prev href=/2015/06/30/a-design-pattern-in-swift-chapter-3-decorator/ ><i class="fa fa-angle-right"></i></a></div></div></div><div class="related card"><h2>Related Posts</h2><ul class=related-posts><li><h4><a href=/general/2015/11/11/singles-day/ >Singles Day <small>11 Nov 2015</small></a></h4></li><li><h4><a href=/jekyll/2015/09/27/relocating-my-blog-from-wordpress-to-Jekyll/ >Relocating My Blog from Wordpress to Jekyll <small>27 Sep 2015</small></a></h4></li><li><h4><a href=/2015/07/18/a-design-pattern-story-in-swift-chapter-21-interpretor/ >A Design Pattern Story in Swift – Chapter 21: Interpretor <small>18 Jul 2015</small></a></h4></li></ul></div><div class=card><div id=disqus_thread></div><script type=text/javascript>var disqus_shortname = 'audreyli';
+<p>Finally test the code:</p>
+
+<figure class="highlight"><pre><code class="language-swift" data-lang="swift"><span class="k">var</span> <span class="n">rose</span> <span class="o">=</span> <span class="n">Rose</span><span class="p">(</span><span class="nl">name</span><span class="p">:</span> <span class="s">&quot;Pretty Rose Flower&quot;</span><span class="p">)</span>
+<span class="k">var</span> <span class="n">person</span> <span class="o">=</span> <span class="n">Person</span><span class="p">(</span><span class="nl">name</span><span class="p">:</span> <span class="s">&quot;Mia&quot;</span><span class="p">,</span> <span class="nl">fullName</span><span class="p">:</span> <span class="s">&quot;Mia Zhu&quot;</span><span class="p">,</span> <span class="nl">movingSpeed</span><span class="p">:</span> <span class="mi">2121</span><span class="p">,</span> <span class="nl">escapeStrategy</span><span class="p">:</span> <span class="n">EscapeByFlying</span><span class="p">()</span> <span class="p">)</span>
+<span class="k">var</span> <span class="n">cat</span> <span class="o">=</span> <span class="n">Cat</span><span class="p">(</span><span class="nl">name</span><span class="p">:</span> <span class="s">&quot;Kitty&quot;</span><span class="p">,</span> <span class="nl">movingSpeed</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="nl">escapeStrategy</span><span class="p">:</span> <span class="n">EscapeByRunning</span><span class="p">())</span>
+
+<span class="k">var</span> <span class="nl">creatures</span><span class="p">:[</span><span class="n">Creature</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">cat</span><span class="p">,</span> <span class="n">rose</span><span class="p">,</span> <span class="n">person</span><span class="p">]</span>
+<span class="n">creatures</span><span class="p">.</span><span class="n">filter</span> <span class="p">{</span> <span class="err">$</span><span class="mi">0</span> <span class="kt">is</span> <span class="n">Animal</span><span class="p">}.</span><span class="n">map</span><span class="p">{</span> <span class="p">(</span><span class="err">$</span><span class="mi">0</span> <span class="kt">as</span><span class="o">!</span> <span class="n">Animal</span><span class="p">).</span><span class="n">performEscape</span><span class="p">()}</span></code></pre></figure>
+
+<p><a href="/assets/images/wp-content/uploads/2015/06/Strategy-Pattern-in-Swift-2.0.png"><img class=" size-full wp-image-957 aligncenter" src="/assets/images/wp-content/uploads/2015/06/Strategy-Pattern-in-Swift-2.0.png" alt="Strategy Pattern in Swift 2.0" width="305" height="119" /></a></p>
+
+ </div>
+ <div class="card">
+   <div class="page-nav">
+    <div>
+        
+         <a class="prev" href="/2015/06/29/a-design-pattern-story-in-swift-chapter-two-observer/"> <i class="fa fa-angle-left"></i></a> 
+          <a class="prev" href="/2015/06/29/a-design-pattern-story-in-swift-chapter-two-observer/"> A Design Pattern Story in Swift &#8211; Chapter 2: Observer</a>
+        
+    </div>
+    <div>
+        
+          <a class="next" href="/2015/06/30/a-design-pattern-in-swift-chapter-3-decorator/">A Design Pattern Story in Swift  &#8211; Chapter 3: Decorator </a>
+         <a class="prev" href="/2015/06/30/a-design-pattern-in-swift-chapter-3-decorator/"> <i class="fa fa-angle-right"></i></a> 
+        
+    </div>
+</div>
+
+
+
+ </div>
+ <div class="related card">
+   <h2>Related Posts</h2>
+   <ul class="related-posts">
+     
+       <li>
+         <h4>
+           <a href="/general/2015/11/11/singles-day/">
+             Singles Day
+             <small>11 Nov 2015</small>
+           </a>
+         </h4>
+       </li>
+     
+       <li>
+         <h4>
+           <a href="/jekyll/2015/09/27/relocating-my-blog-from-wordpress-to-Jekyll/">
+             Relocating My Blog from Wordpress to Jekyll
+             <small>27 Sep 2015</small>
+           </a>
+         </h4>
+       </li>
+     
+       <li>
+         <h4>
+           <a href="/2015/07/18/a-design-pattern-story-in-swift-chapter-21-interpretor/">
+             A Design Pattern Story in Swift – Chapter 21: Interpretor
+             <small>18 Jul 2015</small>
+           </a>
+         </h4>
+       </li>
+     
+   </ul>
+ </div>
+ <div class="card">
+ <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'audreyli';
     
     (function() {
         var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
         dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
         (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-    })();</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript rel=nofollow>comments powered by Disqus.</a></noscript></div></div></div></main><footer class=row><div class="col-md-8 col-md-offset-2 text-center"><a href=http://audreyli.me>&copy; Copyright 2015 &nbsp; &nbsp; AudreyLi.me &nbsp; &nbsp;</a> <a href=/archives>Archives &nbsp; &nbsp; </a><a href=https://github.com/vidaaudrey title="Audrey's Github"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-github fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.linkedin.com/in/audreyauli title="Audrey's Google Plus"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i> </span></a><a href=/feed.xml title="RSS Feed"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-rss fa-stack-1x fa-inverse"></i></span></a></div></footer><script src=https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js></script><script src=https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/js/bootstrap.js></script><script src=/assets/javascript/index.js></script></div><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+ </div>
+ 
+
+      
+    
+
+
+
+
+              </div>
+          </div>
+          
+      </main>
+      <footer class="row">
+    <div class="col-md-8 col-md-offset-2 text-center">
+        <a href="http://audreyli.me">  &copy; Copyright 2015 &nbsp; &nbsp; AudreyLi.me &nbsp; &nbsp;</a> 
+       
+        <a href="/archives">Archives &nbsp; &nbsp; </a>
+        <a href="https://github.com/vidaaudrey" title="Audrey's Github">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+    
+        <a href="https://www.linkedin.com/in/audreyauli" title="Audrey's Google Plus">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+        
+        <a href="/feed.xml" title="RSS Feed">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+    </div>
+    
+</footer>
+
+      
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js"></script>
+<script src="https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/js/bootstrap.js"></script>
+
+<!-- inject:js -->
+<script src="/assets/javascript/index.js"></script>
+<!-- endinject -->
+
+  </div>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
     })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
     ga('create', 'UA-68084914-1', 'auto');
-    ga('send', 'pageview');</script></body></html>
+    ga('send', 'pageview');
+
+  </script>
+  </body>
+</html>

@@ -1,64 +1,318 @@
-<!DOCTYPE html><html xmlns=http://www.w3.org/1999/xhtml xml:lang=en lang=en-us><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><title>Day 23.. Swift Movie App</title><meta name=description content="A simple movie app that demonstrate how to get JSON data and dynamically create the corresponding class. "><link rel=canonical href=http://audreyli.me/2015/05/12/day-23-swift-movie-app/ ><link rel=stylesheet href="http://fonts.googleapis.com/css?family=RobotoDraft:100,300,400|Roboto:300,300italic,400"><link rel=stylesheet href=https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/css/bootstrap.css><link rel=stylesheet href=https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css><link rel=stylesheet href=/assets/stylesheets/style-b5460305d5.min.css><link rel="shortcut icon" href=/assets/favicon.ico><link rel=apple-touch-icon sizes=57x57 href=/assets/images/favicons/apple-touch-icon-57x57.png><link rel=apple-touch-icon sizes=60x60 href=/assets/images/favicons/apple-touch-icon-60x60.png><link rel=apple-touch-icon sizes=72x72 href=/assets/images/favicons/apple-touch-icon-72x72.png><link rel=apple-touch-icon sizes=76x76 href=/assets/images/favicons/apple-touch-icon-76x76.png><link rel=apple-touch-icon sizes=114x114 href=/assets/images/favicons/apple-touch-icon-114x114.png><link rel=apple-touch-icon sizes=120x120 href=/assets/images/favicons/apple-touch-icon-120x120.png><link rel=apple-touch-icon sizes=144x144 href=/assets/images/favicons/apple-touch-icon-144x144.png><link rel=apple-touch-icon sizes=152x152 href=/assets/images/favicons/apple-touch-icon-152x152.png><link rel=apple-touch-icon sizes=180x180 href=/assets/images/favicons/apple-touch-icon-180x180.png><link rel=icon type=image/png href=/assets/images/favicons/favicon-32x32.png sizes=32x32><link type=application/atom+xml rel=alternate href=http://audreyli.me/feed.xml title=vidaaudrey-blog></head><body><nav id=push_sidebar><div class=social-icons><img src=/assets/images/audrey-li.jpg alt="Audrey's Photo" class=img-circle> <a href=https://github.com/vidaaudrey title="Audrey's Github"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-github fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.facebook.com/audreyauli title="Audrey's Facebook"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-facebook fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.linkedin.com/in/audreyauli title="Audrey's Google Plus"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i> </span></a><a href=/assets/images/wechat.jpg title="Audrey's Wechat"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-weixin fa-stack-1x fa-inverse"></i></span></a></div><ul><li><a href=/ >Home</a></li><li><a href=/portfolio>Portfolio</a></li><li><a href=/archives>Archives</a></li><li><a href=/atom.xml>Feed</a></li><li class=rss-subscribe>subscribe <a href=feed.xml>via RSS</a></li><li><a href=/about>About</a></li></ul></nav><div id=body-wrap><header class=nav-down id=wrapper><div class=container-fluid><a class=navbar-brand href=/ ><img alt=Brand src=/assets/images/normal/logo-dark-round.png></a><span class=nav_trigger><i class="fa fa-bars"></i></span></div></header><div class="jumbotron jumbotron-post-long-feature" style="background-image: url('/assets/images/wp-content/uploads/2015/05/snapshot3.png')"><div class=fullwidth-wrapper><div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12"><div class=main-wrap><h2 class=post-title>Day 23.. Swift Movie App</h2><p class=post-date>12 May 2015</p></div></div></div></div><main class=row><div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12"><div class=main-wrap><div class="post card post-content"><p><strong>Description:</strong> a simple movie app that demonstrate how to get JSON data and dynamically create the corresponding class. <a href=https://github.com/vidaaudrey/023-Popular-Movies>Source Code</a></p><p><a href=/assets/images/wp-content/uploads/2015/05/snapshot3.png><img class="aligncenter size-full wp-image-839" src=/assets/images/wp-content/uploads/2015/05/snapshot3.png alt=snapshot width=372 height=667></a></p><figure class=highlight><pre><code class=language-swift data-lang=swift><span class=k>class</span> <span class=nl>Movie</span><span class=p>:</span> <span class=bp>NSObject</span> <span class=p>{</span>
-    <span class=k>var</span> <span class=kt>id</span><span class=o>:</span> <span class=n>Int</span> <span class=o>=</span> <span class=mi>0</span>
-    <span class=k>var</span> <span class=n>originalTitle</span> <span class=o>=</span> <span class=s>&quot;&quot;</span>
-    <span class=k>var</span> <span class=n>releaseDate</span> <span class=o>=</span> <span class=s>&quot;&quot;</span>
-    <span class=k>var</span> <span class=n>posterPath</span> <span class=o>=</span> <span class=s>&quot;&quot;</span>
-    <span class=k>var</span> <span class=n>title</span> <span class=o>=</span> <span class=s>&quot;&quot;</span>
-    <span class=k>var</span> <span class=nl>voteAverage</span><span class=p>:</span><span class=n>Float</span> <span class=o>=</span> <span class=mi>0</span>
-    <span class=k>var</span> <span class=nl>voteCount</span><span class=p>:</span><span class=n>Int</span> <span class=o>=</span> <span class=mi>0</span>
-    <span class=k>func</span> <span class=n>getPosterURL</span><span class=p>()</span> <span class=o>-&gt;</span> <span class=n>String</span> <span class=p>{</span>
-        <span class=k>return</span> <span class=n>ALFrameworkConfig</span><span class=p>.</span><span class=n>TMDBImageURL</span> <span class=o>+</span> <span class=n>posterPath</span>
-    <span class=p>}</span>
-    
-<span class=p>}</span></code></pre></figure><p>&nbsp;</p><figure class=highlight><pre><code class=language-swift data-lang=swift><span class=k>import</span> <span class=n>UIKit</span>
-<span class=k>import</span> <span class=n>ALFramework</span>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<span class=k>class</span> <span class=nl>ViewController</span><span class=p>:</span> <span class=bp>UIViewController</span> <span class=p>{</span>
+  <title>Day 23.. Swift Movie App</title>
+  <meta name="description" content="A simple movie app that demonstrate how to get JSON data and dynamically create the corresponding class. ">
+  <link rel="canonical" href="http://audreyli.me/2015/05/12/day-23-swift-movie-app/">
+  
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=RobotoDraft:100,300,400|Roboto:300,300italic,400">
+  <!-- Boostrap -->
+  <link rel="stylesheet" href="https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/css/bootstrap.css">
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+  
+  <!-- inject:css -->
+  <link rel="stylesheet" href="/assets/stylesheets/style.css">
+  <!-- endinject -->
 
-    <span class=p>@</span><span class=kt>IBOutlet</span> <span class=k>weak</span> <span class=k>var</span> <span class=nl>tableView</span><span class=p>:</span> <span class=bp>UITableView</span><span class=o>!</span>
-    <span class=k>var</span> <span class=nl>dataSource</span><span class=p>:</span><span class=n>TableViewDataSource</span><span class=o>!</span>
-    <span class=k>var</span> <span class=nl>movies</span><span class=p>:[</span><span class=n>Movie</span><span class=p>]</span> <span class=o>=</span> <span class=p>[]</span>
+  <!-- Icons -->
+  <link rel="shortcut icon" href="/assets/favicon.ico">
+  <link rel="apple-touch-icon" sizes="57x57" href="/assets/images/favicons/apple-touch-icon-57x57.png">
+  <link rel="apple-touch-icon" sizes="60x60" href="/assets/images/favicons/apple-touch-icon-60x60.png">
+  <link rel="apple-touch-icon" sizes="72x72" href="/assets/images/favicons/apple-touch-icon-72x72.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="/assets/images/favicons/apple-touch-icon-76x76.png">
+  <link rel="apple-touch-icon" sizes="114x114" href="/assets/images/favicons/apple-touch-icon-114x114.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="/assets/images/favicons/apple-touch-icon-120x120.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="/assets/images/favicons/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="/assets/images/favicons/apple-touch-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/favicons/apple-touch-icon-180x180.png">
+  <link rel="icon" type="image/png" href="/assets/images/favicons/favicon-32x32.png" sizes="32x32">
+
+  <!-- RSS -->
+  <link type="application/atom+xml" rel="alternate" href="http://audreyli.me/feed.xml" title="vidaaudrey-blog" />
+</head>
+
+  
+  <body>
+    <nav id="push_sidebar">
+    <div class="social-icons">
+        <img src="/assets/images/audrey-li.jpg" alt="Audrey's Photo" class="img-circle">
+
+        <a href="https://github.com/vidaaudrey" title="Audrey's Github">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+        <a href="https://www.facebook.com/audreyauli" title="Audrey's Facebook">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-facebook fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+
+        <a href="https://www.linkedin.com/in/audreyauli" title="Audrey's Google Plus">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+        
+        <a href="/assets/images/wechat.jpg" title="Audrey's Wechat">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-weixin fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+
+    </div>
+
+    <ul>
+      <li><a href="/">Home</a></li>
+      <li><a href="/portfolio">Portfolio</a></li>
+      <li><a href="/archives">Archives</a></li>
+      <li><a href="/atom.xml">Feed</a></li>
+      <li class="rss-subscribe">subscribe <a href="feed.xml">via RSS</a></li>
+      <li><a href="/about">About</a></li>
+    </ul>
+</nav>
+
+
+    <div id="body-wrap">
+      <header class="nav-down"  id="wrapper">
+    <div class="container-fluid">
+       <a class="navbar-brand" href="/"><img alt="Brand" src="/assets/images/normal/logo-dark-round.png"></a>
+       <span class="nav_trigger"><i class="fa fa-bars"></i></span>
+    </div>
+</header>
+
+      
+
+<!-- jumbotron for pages -->
+
+<!-- jumbotron for post page, with feature image -->
+  
+     <div class="jumbotron jumbotron-post-long-feature" style="background-image: url('/assets/images/wp-content/uploads/2015/05/snapshot3.png')">
+         <div class="fullwidth-wrapper">
+    <div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12 ">
+      <div class="main-wrap">
+           <h2 class="post-title">Day 23.. Swift Movie App</h2>
+            <p class="post-date">12 May 2015</p>
+      </div>
+    </div>
+</div>
+      </div>
+
+  <!-- jumbotron for post page, without feature image -->
+  
+
+
+
+
+
+
+      <main class="row">
+          <div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12 ">
+              <div class="main-wrap">
+                <div class="post card post-content">
+   <p><strong>Description:</strong> a simple movie app that demonstrate how to get JSON data and dynamically create the corresponding class. <a href="https://github.com/vidaaudrey/023-Popular-Movies">Source Code</a></p>
+
+<p><a href="/assets/images/wp-content/uploads/2015/05/snapshot3.png"><img class="aligncenter size-full wp-image-839" src="/assets/images/wp-content/uploads/2015/05/snapshot3.png" alt="snapshot" width="372" height="667" /></a></p>
+
+<figure class="highlight"><pre><code class="language-swift" data-lang="swift"><span class="k">class</span> <span class="nl">Movie</span><span class="p">:</span> <span class="bp">NSObject</span> <span class="p">{</span>
+    <span class="k">var</span> <span class="kt">id</span><span class="o">:</span> <span class="n">Int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">var</span> <span class="n">originalTitle</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+    <span class="k">var</span> <span class="n">releaseDate</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+    <span class="k">var</span> <span class="n">posterPath</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+    <span class="k">var</span> <span class="n">title</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+    <span class="k">var</span> <span class="nl">voteAverage</span><span class="p">:</span><span class="n">Float</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">var</span> <span class="nl">voteCount</span><span class="p">:</span><span class="n">Int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">func</span> <span class="n">getPosterURL</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">String</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">ALFrameworkConfig</span><span class="p">.</span><span class="n">TMDBImageURL</span> <span class="o">+</span> <span class="n">posterPath</span>
+    <span class="p">}</span>
     
-    <span class=kr>override</span> <span class=k>func</span> <span class=n>viewDidLoad</span><span class=p>()</span> <span class=p>{</span>
-        <span class=nb>super</span><span class=p>.</span><span class=n>viewDidLoad</span><span class=p>()</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>&nbsp;</p>
+
+<figure class="highlight"><pre><code class="language-swift" data-lang="swift"><span class="k">import</span> <span class="n">UIKit</span>
+<span class="k">import</span> <span class="n">ALFramework</span>
+
+<span class="k">class</span> <span class="nl">ViewController</span><span class="p">:</span> <span class="bp">UIViewController</span> <span class="p">{</span>
+
+    <span class="p">@</span><span class="kt">IBOutlet</span> <span class="k">weak</span> <span class="k">var</span> <span class="nl">tableView</span><span class="p">:</span> <span class="bp">UITableView</span><span class="o">!</span>
+    <span class="k">var</span> <span class="nl">dataSource</span><span class="p">:</span><span class="n">TableViewDataSource</span><span class="o">!</span>
+    <span class="k">var</span> <span class="nl">movies</span><span class="p">:[</span><span class="n">Movie</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="kr">override</span> <span class="k">func</span> <span class="n">viewDidLoad</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nb">super</span><span class="p">.</span><span class="n">viewDidLoad</span><span class="p">()</span>
         
-        <span class=n>dataSource</span> <span class=o>=</span> <span class=n>TableViewDataSource</span><span class=p>(</span><span class=nl>items</span><span class=p>:</span> <span class=n>movies</span><span class=p>,</span> <span class=nl>cellIdentifier</span><span class=p>:</span> <span class=s>&quot;cell&quot;</span><span class=p>,</span> <span class=nl>cellActionHandler</span><span class=p>:</span> <span class=nb>nil</span><span class=p>,</span> <span class=nl>configureBlock</span><span class=p>:</span> <span class=p>{</span> <span class=p>(</span><span class=n>cell</span><span class=p>,</span> <span class=n>item</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=p>()</span> <span class=k>in</span>
-            <span class=k>if</span> <span class=k>let</span> <span class=n>actualCell</span> <span class=o>=</span> <span class=n>cell</span> <span class=kt>as</span><span class=o>?</span> <span class=n>MovieTableViewCell</span> <span class=p>{</span>
-                <span class=n>actualCell</span><span class=p>.</span><span class=n>configCells</span><span class=p>(</span><span class=n>item</span> <span class=kt>as</span><span class=o>!</span> <span class=n>Movie</span><span class=p>)</span>
-            <span class=p>}</span>
-        <span class=p>})</span>
-        <span class=n>tableView</span><span class=p>.</span><span class=n>dataSource</span> <span class=o>=</span> <span class=n>dataSource</span>
-        <span class=n>tableView</span><span class=p>.</span><span class=n>delegate</span> <span class=o>=</span> <span class=n>dataSource</span>
+        <span class="n">dataSource</span> <span class="o">=</span> <span class="n">TableViewDataSource</span><span class="p">(</span><span class="nl">items</span><span class="p">:</span> <span class="n">movies</span><span class="p">,</span> <span class="nl">cellIdentifier</span><span class="p">:</span> <span class="s">&quot;cell&quot;</span><span class="p">,</span> <span class="nl">cellActionHandler</span><span class="p">:</span> <span class="nb">nil</span><span class="p">,</span> <span class="nl">configureBlock</span><span class="p">:</span> <span class="p">{</span> <span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">()</span> <span class="k">in</span>
+            <span class="k">if</span> <span class="k">let</span> <span class="n">actualCell</span> <span class="o">=</span> <span class="n">cell</span> <span class="kt">as</span><span class="o">?</span> <span class="n">MovieTableViewCell</span> <span class="p">{</span>
+                <span class="n">actualCell</span><span class="p">.</span><span class="n">configCells</span><span class="p">(</span><span class="n">item</span> <span class="kt">as</span><span class="o">!</span> <span class="n">Movie</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="p">})</span>
+        <span class="n">tableView</span><span class="p">.</span><span class="n">dataSource</span> <span class="o">=</span> <span class="n">dataSource</span>
+        <span class="n">tableView</span><span class="p">.</span><span class="n">delegate</span> <span class="o">=</span> <span class="n">dataSource</span>
         
-        <span class=k>let</span> <span class=n>url</span> <span class=o>=</span> <span class=n>ALFrameworkConfig</span><span class=p>.</span><span class=n>TMDBURLPopular</span> <span class=o>+</span> <span class=n>ALFrameworkConfig</span><span class=p>.</span><span class=n>TMDBKey</span>
-        <span class=n>ALUtils</span><span class=p>.</span><span class=n>getJSONObjectFromURL</span><span class=p>(</span><span class=n>url</span><span class=p>,</span> <span class=nl>callback</span><span class=p>:</span> <span class=p>{</span> <span class=p>(</span><span class=n>jsonData</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Void</span> <span class=k>in</span>
+        <span class="k">let</span> <span class="n">url</span> <span class="o">=</span> <span class="n">ALFrameworkConfig</span><span class="p">.</span><span class="n">TMDBURLPopular</span> <span class="o">+</span> <span class="n">ALFrameworkConfig</span><span class="p">.</span><span class="n">TMDBKey</span>
+        <span class="n">ALUtils</span><span class="p">.</span><span class="n">getJSONObjectFromURL</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="nl">callback</span><span class="p">:</span> <span class="p">{</span> <span class="p">(</span><span class="n">jsonData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Void</span> <span class="k">in</span>
             
-            <span class=k>if</span> <span class=k>let</span> <span class=n>jsonArr</span> <span class=o>=</span> <span class=n>jsonData</span><span class=p>[</span><span class=s>&quot;results&quot;</span><span class=p>]</span> <span class=kt>as</span><span class=o>?</span> <span class=bp>NSArray</span> <span class=p>{</span>
-                <span class=k>for</span> <span class=n>jsonDictData</span> <span class=k>in</span> <span class=n>jsonArr</span> <span class=p>{</span>
-                    <span class=k>if</span> <span class=k>let</span> <span class=n>jsonDict</span> <span class=o>=</span> <span class=n>jsonDictData</span>  <span class=kt>as</span><span class=o>?</span> <span class=bp>NSDictionary</span> <span class=p>{</span>
-                        <span class=c1>// dynamically create movie class</span>
-                        <span class=k>let</span> <span class=n>movie</span>  <span class=o>=</span> <span class=n>Movie</span><span class=p>.</span><span class=n>fromJSON</span><span class=p>(</span><span class=n>jsonDict</span><span class=p>)</span>
-                        <span class=nb>self</span><span class=p>.</span><span class=n>movies</span><span class=p>.</span><span class=n>append</span><span class=p>(</span><span class=n>movie</span><span class=p>)</span>
-                    <span class=p>}</span>
-                    <span class=nb>self</span><span class=p>.</span><span class=n>dataSource</span><span class=p>.</span><span class=n>items</span> <span class=o>=</span> <span class=nb>self</span><span class=p>.</span><span class=n>movies</span>
-                    <span class=nb>self</span><span class=p>.</span><span class=n>tableView</span><span class=p>.</span><span class=n>reloadData</span><span class=p>()</span>
-                <span class=p>}</span>
+            <span class="k">if</span> <span class="k">let</span> <span class="n">jsonArr</span> <span class="o">=</span> <span class="n">jsonData</span><span class="p">[</span><span class="s">&quot;results&quot;</span><span class="p">]</span> <span class="kt">as</span><span class="o">?</span> <span class="bp">NSArray</span> <span class="p">{</span>
+                <span class="k">for</span> <span class="n">jsonDictData</span> <span class="k">in</span> <span class="n">jsonArr</span> <span class="p">{</span>
+                    <span class="k">if</span> <span class="k">let</span> <span class="n">jsonDict</span> <span class="o">=</span> <span class="n">jsonDictData</span>  <span class="kt">as</span><span class="o">?</span> <span class="bp">NSDictionary</span> <span class="p">{</span>
+                        <span class="c1">// dynamically create movie class</span>
+                        <span class="k">let</span> <span class="n">movie</span>  <span class="o">=</span> <span class="n">Movie</span><span class="p">.</span><span class="n">fromJSON</span><span class="p">(</span><span class="n">jsonDict</span><span class="p">)</span>
+                        <span class="nb">self</span><span class="p">.</span><span class="n">movies</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">movie</span><span class="p">)</span>
+                    <span class="p">}</span>
+                    <span class="nb">self</span><span class="p">.</span><span class="n">dataSource</span><span class="p">.</span><span class="n">items</span> <span class="o">=</span> <span class="nb">self</span><span class="p">.</span><span class="n">movies</span>
+                    <span class="nb">self</span><span class="p">.</span><span class="n">tableView</span><span class="p">.</span><span class="n">reloadData</span><span class="p">()</span>
+                <span class="p">}</span>
                 
-            <span class=p>}</span>
-        <span class=p>})</span>
+            <span class="p">}</span>
+        <span class="p">})</span>
         
-    <span class=p>}</span>
+    <span class="p">}</span>
 
-<span class=p>}</span></code></pre></figure><p><strong>Links:</strong></p><ul><li><a href=https://www.weheartswift.com/swift-objc-magic/ >Swift + Objc = Magic</a></li><li><a href=http://docs.themoviedb.apiary.io/#reference/movies/moviepopular/get>Movie Data </a></li></ul></div><div class=card><div class=page-nav><div><a class=prev href=/2015/05/09/day-22-apple-watch-app-coin-tossing/ ><i class="fa fa-angle-left"></i></a> <a class=prev href=/2015/05/09/day-22-apple-watch-app-coin-tossing/ >Day 22 &#8211; Apple Watch App &#8211; Coin Tossing</a></div><div><a class=next href=/2015/05/21/day-26-simple-todo-app-with-today-extension/ >Day 26&#8230;Simple-Todo-App-With-Today-Extension </a><a class=prev href=/2015/05/21/day-26-simple-todo-app-with-today-extension/ ><i class="fa fa-angle-right"></i></a></div></div></div><div class="related card"><h2>Related Posts</h2><ul class=related-posts><li><h4><a href=/general/2015/11/11/singles-day/ >Singles Day <small>11 Nov 2015</small></a></h4></li><li><h4><a href=/jekyll/2015/09/27/relocating-my-blog-from-wordpress-to-Jekyll/ >Relocating My Blog from Wordpress to Jekyll <small>27 Sep 2015</small></a></h4></li><li><h4><a href=/2015/07/18/a-design-pattern-story-in-swift-chapter-21-interpretor/ >A Design Pattern Story in Swift – Chapter 21: Interpretor <small>18 Jul 2015</small></a></h4></li></ul></div><div class=card><div id=disqus_thread></div><script type=text/javascript>var disqus_shortname = 'audreyli';
+<span class="p">}</span></code></pre></figure>
+
+<p><strong>Links:</strong></p>
+
+<ul>
+<li><a href="https://www.weheartswift.com/swift-objc-magic/">Swift + Objc = Magic</a></li>
+<li><a href="http://docs.themoviedb.apiary.io/#reference/movies/moviepopular/get">Movie Data </a></li>
+</ul>
+
+ </div>
+ <div class="card">
+   <div class="page-nav">
+    <div>
+        
+         <a class="prev" href="/2015/05/09/day-22-apple-watch-app-coin-tossing/"> <i class="fa fa-angle-left"></i></a> 
+          <a class="prev" href="/2015/05/09/day-22-apple-watch-app-coin-tossing/"> Day 22 &#8211; Apple Watch App &#8211; Coin Tossing</a>
+        
+    </div>
+    <div>
+        
+          <a class="next" href="/2015/05/21/day-26-simple-todo-app-with-today-extension/">Day 26&#8230;Simple-Todo-App-With-Today-Extension </a>
+         <a class="prev" href="/2015/05/21/day-26-simple-todo-app-with-today-extension/"> <i class="fa fa-angle-right"></i></a> 
+        
+    </div>
+</div>
+
+
+
+ </div>
+ <div class="related card">
+   <h2>Related Posts</h2>
+   <ul class="related-posts">
+     
+       <li>
+         <h4>
+           <a href="/general/2015/11/11/singles-day/">
+             Singles Day
+             <small>11 Nov 2015</small>
+           </a>
+         </h4>
+       </li>
+     
+       <li>
+         <h4>
+           <a href="/jekyll/2015/09/27/relocating-my-blog-from-wordpress-to-Jekyll/">
+             Relocating My Blog from Wordpress to Jekyll
+             <small>27 Sep 2015</small>
+           </a>
+         </h4>
+       </li>
+     
+       <li>
+         <h4>
+           <a href="/2015/07/18/a-design-pattern-story-in-swift-chapter-21-interpretor/">
+             A Design Pattern Story in Swift – Chapter 21: Interpretor
+             <small>18 Jul 2015</small>
+           </a>
+         </h4>
+       </li>
+     
+   </ul>
+ </div>
+ <div class="card">
+ <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'audreyli';
     
     (function() {
         var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
         dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
         (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-    })();</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript rel=nofollow>comments powered by Disqus.</a></noscript></div></div></div></main><footer class=row><div class="col-md-8 col-md-offset-2 text-center"><a href=http://audreyli.me>&copy; Copyright 2015 &nbsp; &nbsp; AudreyLi.me &nbsp; &nbsp;</a> <a href=/archives>Archives &nbsp; &nbsp; </a><a href=https://github.com/vidaaudrey title="Audrey's Github"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-github fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.linkedin.com/in/audreyauli title="Audrey's Google Plus"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i> </span></a><a href=/feed.xml title="RSS Feed"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-rss fa-stack-1x fa-inverse"></i></span></a></div></footer><script src=https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js></script><script src=https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/js/bootstrap.js></script><script src=/assets/javascript/index.js></script></div><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+ </div>
+ 
+
+      
+    
+
+
+
+
+              </div>
+          </div>
+          
+      </main>
+      <footer class="row">
+    <div class="col-md-8 col-md-offset-2 text-center">
+        <a href="http://audreyli.me">  &copy; Copyright 2015 &nbsp; &nbsp; AudreyLi.me &nbsp; &nbsp;</a> 
+       
+        <a href="/archives">Archives &nbsp; &nbsp; </a>
+        <a href="https://github.com/vidaaudrey" title="Audrey's Github">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+    
+        <a href="https://www.linkedin.com/in/audreyauli" title="Audrey's Google Plus">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+        
+        <a href="/feed.xml" title="RSS Feed">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+    </div>
+    
+</footer>
+
+      
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js"></script>
+<script src="https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/js/bootstrap.js"></script>
+
+<!-- inject:js -->
+<script src="/assets/javascript/index.js"></script>
+<!-- endinject -->
+
+  </div>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
     })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
     ga('create', 'UA-68084914-1', 'auto');
-    ga('send', 'pageview');</script></body></html>
+    ga('send', 'pageview');
+
+  </script>
+  </body>
+</html>

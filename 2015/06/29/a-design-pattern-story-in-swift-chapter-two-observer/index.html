@@ -1,167 +1,423 @@
-<!DOCTYPE html><html xmlns=http://www.w3.org/1999/xhtml xml:lang=en lang=en-us><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><title>A Design Pattern Story in Swift &#8211; Chapter 2: Observer</title><meta name=description content="In the deep forest, there is a beautiful witch who was born with the power to tell the past and future. In the beginning she was just a little girl in a near..."><link rel=canonical href=http://audreyli.me/2015/06/29/a-design-pattern-story-in-swift-chapter-two-observer/ ><link rel=stylesheet href="http://fonts.googleapis.com/css?family=RobotoDraft:100,300,400|Roboto:300,300italic,400"><link rel=stylesheet href=https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/css/bootstrap.css><link rel=stylesheet href=https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css><link rel=stylesheet href=/assets/stylesheets/style-b5460305d5.min.css><link rel="shortcut icon" href=/assets/favicon.ico><link rel=apple-touch-icon sizes=57x57 href=/assets/images/favicons/apple-touch-icon-57x57.png><link rel=apple-touch-icon sizes=60x60 href=/assets/images/favicons/apple-touch-icon-60x60.png><link rel=apple-touch-icon sizes=72x72 href=/assets/images/favicons/apple-touch-icon-72x72.png><link rel=apple-touch-icon sizes=76x76 href=/assets/images/favicons/apple-touch-icon-76x76.png><link rel=apple-touch-icon sizes=114x114 href=/assets/images/favicons/apple-touch-icon-114x114.png><link rel=apple-touch-icon sizes=120x120 href=/assets/images/favicons/apple-touch-icon-120x120.png><link rel=apple-touch-icon sizes=144x144 href=/assets/images/favicons/apple-touch-icon-144x144.png><link rel=apple-touch-icon sizes=152x152 href=/assets/images/favicons/apple-touch-icon-152x152.png><link rel=apple-touch-icon sizes=180x180 href=/assets/images/favicons/apple-touch-icon-180x180.png><link rel=icon type=image/png href=/assets/images/favicons/favicon-32x32.png sizes=32x32><link type=application/atom+xml rel=alternate href=http://audreyli.me/feed.xml title=vidaaudrey-blog></head><body><nav id=push_sidebar><div class=social-icons><img src=/assets/images/audrey-li.jpg alt="Audrey's Photo" class=img-circle> <a href=https://github.com/vidaaudrey title="Audrey's Github"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-github fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.facebook.com/audreyauli title="Audrey's Facebook"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-facebook fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.linkedin.com/in/audreyauli title="Audrey's Google Plus"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i> </span></a><a href=/assets/images/wechat.jpg title="Audrey's Wechat"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-weixin fa-stack-1x fa-inverse"></i></span></a></div><ul><li><a href=/ >Home</a></li><li><a href=/portfolio>Portfolio</a></li><li><a href=/archives>Archives</a></li><li><a href=/atom.xml>Feed</a></li><li class=rss-subscribe>subscribe <a href=feed.xml>via RSS</a></li><li><a href=/about>About</a></li></ul></nav><div id=body-wrap><header class=nav-down id=wrapper><div class=container-fluid><a class=navbar-brand href=/ ><img alt=Brand src=/assets/images/normal/logo-dark-round.png></a><span class=nav_trigger><i class="fa fa-bars"></i></span></div></header><div class="jumbotron jumbotron-post" style="background-image: url('/assets/images/wp-content/uploads/2015/06/pic.jpg')"><div class=fullwidth-wrapper><div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12"><div class=main-wrap><h2 class=post-title>A Design Pattern Story in Swift &#8211; Chapter 2: Observer</h2><p class=post-date>29 Jun 2015</p></div></div></div></div><main class=row><div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12"><div class=main-wrap><div class="post card post-content"><p><span>In the deep forest, there is a beautiful witch who was born with the power to tell the past and future. In the beginning she was just a little girl in a nearby village. She knows everyone and whenever she sees danger in the future, she would warn the person. But soon she realized there are simply too many people to warn, and some of which don&#8217;t even want any help.</span></p><p><span>So she told the good people of the village that if they want to know her update, they can tune in to listen to her music station and they shall know the message from the music.</span></p><figure class=highlight><pre><code class=language-swift data-lang=swift><span class=c1>//: Define the message  for the all parties</span>
-<span class=k>enum</span> <span class=nl>WitchMessageType</span><span class=p>:</span> <span class=n>String</span> <span class=p>{</span>
-    <span class=k>case</span> <span class=n>IsChrystalBadLuck</span> <span class=o>=</span> <span class=s>&quot;Bad_Luck&quot;</span>
-    <span class=k>case</span> <span class=n>IsChrystalGoodLuck</span> <span class=o>=</span> <span class=s>&quot;Good_Luck&quot;</span>
-    <span class=k>case</span> <span class=n>StationCreated</span> <span class=o>=</span> <span class=s>&quot;Station_Created&quot;</span>
-    <span class=k>case</span> <span class=n>StationDestroyed</span> <span class=o>=</span> <span class=s>&quot;Station_Destroyed&quot;</span>
-<span class=p>}</span>
-<span class=k>class</span> <span class=n>WitchMessage</span> <span class=p>{</span>
-    <span class=k>let</span> <span class=nl>type</span><span class=p>:</span> <span class=n>WitchMessageType</span>
-    <span class=k>let</span> <span class=nl>data</span><span class=p>:</span> <span class=n>Any</span><span class=o>?</span>
-    <span class=k>init</span><span class=p>(</span><span class=nl>type</span><span class=p>:</span> <span class=n>WitchMessageType</span><span class=p>,</span> <span class=nl>data</span><span class=p>:</span> <span class=n>Any</span><span class=o>?</span><span class=p>)</span> <span class=p>{</span>
-        <span class=nb>self</span><span class=p>.</span><span class=n>type</span> <span class=o>=</span> <span class=n>type</span>
-        <span class=nb>self</span><span class=p>.</span><span class=n>data</span> <span class=o>=</span> <span class=n>data</span>
-    <span class=p>}</span>
-<span class=p>}</span>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <title>A Design Pattern Story in Swift &#8211; Chapter 2: Observer</title>
+  <meta name="description" content="In the deep forest, there is a beautiful witch who was born with the power to tell the past and future. In the beginning she was just a little girl in a near...">
+  <link rel="canonical" href="http://audreyli.me/2015/06/29/a-design-pattern-story-in-swift-chapter-two-observer/">
+  
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=RobotoDraft:100,300,400|Roboto:300,300italic,400">
+  <!-- Boostrap -->
+  <link rel="stylesheet" href="https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/css/bootstrap.css">
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+  
+  <!-- inject:css -->
+  <link rel="stylesheet" href="/assets/stylesheets/style.css">
+  <!-- endinject -->
 
-<span class=c1>//: the Good Witch will tell everybody the name of the person she tells fortune for. Bad witch may not.</span>
-<span class=k>class</span> <span class=nl>GoodWitchMessage</span><span class=p>:</span> <span class=n>WitchMessage</span> <span class=p>{</span>
-    <span class=k>var</span> <span class=nl>name</span><span class=p>:</span> <span class=n>String</span>
-    <span class=k>var</span> <span class=nl>isBadLuck</span><span class=p>:</span> <span class=n>Bool</span> <span class=p>{</span> <span class=k>return</span> <span class=nb>self</span><span class=p>.</span><span class=n>type</span> <span class=o>==</span> <span class=n>WitchMessageType</span><span class=p>.</span><span class=n>IsChrystalBadLuck</span> <span class=p>}</span>
-    
-    <span class=k>init</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=n>String</span><span class=p>,</span> <span class=nl>type</span><span class=p>:</span> <span class=n>WitchMessageType</span><span class=p>,</span> <span class=nl>data</span><span class=p>:</span> <span class=n>Any</span><span class=o>?</span><span class=p>){</span>
-        <span class=nb>self</span><span class=p>.</span><span class=n>name</span> <span class=o>=</span> <span class=n>name</span>
-        <span class=nb>super</span><span class=p>.</span><span class=k>init</span><span class=p>(</span><span class=nl>type</span><span class=p>:</span> <span class=n>type</span><span class=p>,</span> <span class=nl>data</span><span class=p>:</span> <span class=n>data</span><span class=p>)</span>
-    <span class=p>}</span>
-<span class=p>}</span>
+  <!-- Icons -->
+  <link rel="shortcut icon" href="/assets/favicon.ico">
+  <link rel="apple-touch-icon" sizes="57x57" href="/assets/images/favicons/apple-touch-icon-57x57.png">
+  <link rel="apple-touch-icon" sizes="60x60" href="/assets/images/favicons/apple-touch-icon-60x60.png">
+  <link rel="apple-touch-icon" sizes="72x72" href="/assets/images/favicons/apple-touch-icon-72x72.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="/assets/images/favicons/apple-touch-icon-76x76.png">
+  <link rel="apple-touch-icon" sizes="114x114" href="/assets/images/favicons/apple-touch-icon-114x114.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="/assets/images/favicons/apple-touch-icon-120x120.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="/assets/images/favicons/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="/assets/images/favicons/apple-touch-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/favicons/apple-touch-icon-180x180.png">
+  <link rel="icon" type="image/png" href="/assets/images/favicons/favicon-32x32.png" sizes="32x32">
 
-<span class=c1>// People who listen to her music station are observers</span>
-<span class=k>protocol</span> <span class=n>Observer</span> <span class=p>{</span>
-    <span class=k>var</span> <span class=nl>name</span><span class=p>:</span><span class=n>String</span> <span class=p>{</span> <span class=kr>get</span> <span class=p>}</span>
-    <span class=k>func</span> <span class=n>notify</span><span class=p>(</span><span class=nl>witchMessage</span><span class=p>:</span> <span class=n>WitchMessage</span><span class=p>)</span>
-<span class=p>}</span>
+  <!-- RSS -->
+  <link type="application/atom+xml" rel="alternate" href="http://audreyli.me/feed.xml" title="vidaaudrey-blog" />
+</head>
 
+  
+  <body>
+    <nav id="push_sidebar">
+    <div class="social-icons">
+        <img src="/assets/images/audrey-li.jpg" alt="Audrey's Photo" class="img-circle">
 
-<span class=k>extension</span> <span class=n>CustomStringConvertible</span> <span class=k>where</span> <span class=nl>Self</span><span class=p>:</span> <span class=n>Observer</span> <span class=p>{</span>
-    <span class=k>var</span> <span class=nl>description</span><span class=p>:</span> <span class=n>String</span> <span class=p>{</span> <span class=k>return</span> <span class=nb>self</span><span class=p>.</span><span class=n>name</span> <span class=p>}</span>
-<span class=p>}</span>
+        <a href="https://github.com/vidaaudrey" title="Audrey's Github">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+        <a href="https://www.facebook.com/audreyauli" title="Audrey's Facebook">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-facebook fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
 
-
-<span class=k>protocol</span> <span class=n>Station</span> <span class=p>{</span>
-    <span class=k>func</span> <span class=n>addObserver</span><span class=p>(</span><span class=nl>observers</span><span class=p>:</span> <span class=n>Observer</span><span class=p>...)</span>
-    <span class=k>func</span> <span class=n>removerObserver</span><span class=p>(</span><span class=nl>observer</span><span class=p>:</span> <span class=n>Observer</span><span class=p>)</span>
-<span class=p>}</span>
-
-
-<span class=k>class</span> <span class=nl>BaseStation</span><span class=p>:</span> <span class=n>Station</span><span class=p>,</span> <span class=n>CustomStringConvertible</span> <span class=p>{</span>
-    <span class=n>private</span> <span class=k>var</span> <span class=nl>observers</span><span class=p>:</span> <span class=p>[</span><span class=n>Observer</span><span class=p>]</span> <span class=o>=</span> <span class=p>[]</span>
-    <span class=k>var</span> <span class=nl>description</span><span class=p>:</span> <span class=n>String</span> <span class=p>{</span> <span class=k>return</span> <span class=s>&quot;I am a Station and my observers are: \(observers)&quot;</span> <span class=p>}</span>
-    <span class=n>private</span> <span class=k>var</span> <span class=n>orderedQueue</span> <span class=o>=</span> <span class=n>dispatch_queue_create</span><span class=p>(</span><span class=s>&quot;orQ&quot;</span><span class=p>,</span> <span class=n>DISPATCH_QUEUE_CONCURRENT</span><span class=p>)</span>
-    
-    <span class=c1>//: She can only add or remove one person at a time</span>
-    <span class=k>func</span> <span class=n>addObserver</span><span class=p>(</span><span class=nl>observers</span><span class=p>:</span> <span class=n>Observer</span><span class=p>...)</span> <span class=p>{</span>
-        <span class=n>dispatch_barrier_sync</span><span class=p>(</span><span class=n>orderedQueue</span><span class=p>)</span> <span class=p>{</span>
-            <span class=n>observers</span><span class=p>.</span><span class=n>map</span> <span class=p>{</span> <span class=nb>self</span><span class=p>.</span><span class=n>observers</span><span class=p>.</span><span class=n>append</span><span class=p>(</span><span class=err>$</span><span class=mi>0</span><span class=p>)</span> <span class=p>}</span>
-        <span class=p>}</span>
-    <span class=p>}</span>
-    
-    
-    <span class=k>func</span> <span class=n>removerObserver</span><span class=p>(</span><span class=nl>observer</span><span class=p>:</span> <span class=n>Observer</span><span class=p>)</span> <span class=p>{</span>
-        <span class=n>dispatch_barrier_sync</span><span class=p>(</span><span class=n>orderedQueue</span><span class=p>)</span> <span class=p>{</span> <span class=p>()</span> <span class=o>-&gt;</span> <span class=n>Void</span> <span class=k>in</span>
-            <span class=nb>self</span><span class=p>.</span><span class=n>observers</span><span class=p>.</span><span class=n>filter</span><span class=p>{</span> <span class=err>$</span><span class=mf>0.</span><span class=n>name</span> <span class=o>==</span> <span class=n>observer</span><span class=p>.</span><span class=n>name</span><span class=p>}</span>
-            <span class=n>print</span><span class=p>(</span><span class=s>&quot;removed observer \(observer.name)&quot;</span><span class=p>)</span>
-        <span class=p>}</span>
-    <span class=p>}</span>
-    <span class=k>func</span> <span class=n>sendNotificationToAll</span><span class=p>(</span><span class=nl>witchMessage</span><span class=p>:</span> <span class=n>WitchMessage</span><span class=p>)</span> <span class=p>{</span>
-        <span class=n>dispatch_sync</span><span class=p>(</span><span class=n>orderedQueue</span><span class=p>)</span> <span class=p>{</span> <span class=p>()</span> <span class=o>-&gt;</span> <span class=n>Void</span> <span class=k>in</span>
-            <span class=nb>self</span><span class=p>.</span><span class=n>observers</span><span class=p>.</span><span class=n>map</span><span class=p>{</span> <span class=err>$</span><span class=mf>0.</span><span class=n>notify</span><span class=p>(</span><span class=n>witchMessage</span><span class=p>)</span> <span class=p>}</span>
-        <span class=p>}</span>
-    <span class=p>}</span>
-<span class=p>}</span>
-
-<span class=k>class</span> <span class=nl>WitchStation</span><span class=p>:</span> <span class=n>BaseStation</span> <span class=p>{</span>
-    
-    <span class=k>func</span> <span class=n>checkCrystalBall</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=n>String</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Bool</span> <span class=p>{</span>
-        <span class=k>var</span> <span class=n>messageType</span> <span class=o>=</span> <span class=n>WitchMessageType</span><span class=p>.</span><span class=n>IsChrystalGoodLuck</span>
+        <a href="https://www.linkedin.com/in/audreyauli" title="Audrey's Google Plus">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
         
-        <span class=k>if</span> <span class=n>RandomYesOrNoGeneratorByInt</span><span class=p>.</span><span class=n>random</span><span class=p>()</span> <span class=p>{</span>
-            <span class=n>print</span><span class=p>(</span><span class=s>&quot;Witch Tell: Good luck ahead&quot;</span><span class=p>)</span>
-        <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
-            <span class=n>messageType</span> <span class=o>=</span> <span class=n>WitchMessageType</span><span class=p>.</span><span class=n>IsChrystalBadLuck</span>
-            <span class=n>print</span><span class=p>(</span><span class=s>&quot;Witch Tell: Bad luck ahead&quot;</span><span class=p>)</span>
-        <span class=p>}</span>
+        <a href="/assets/images/wechat.jpg" title="Audrey's Wechat">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-weixin fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+
+    </div>
+
+    <ul>
+      <li><a href="/">Home</a></li>
+      <li><a href="/portfolio">Portfolio</a></li>
+      <li><a href="/archives">Archives</a></li>
+      <li><a href="/atom.xml">Feed</a></li>
+      <li class="rss-subscribe">subscribe <a href="feed.xml">via RSS</a></li>
+      <li><a href="/about">About</a></li>
+    </ul>
+</nav>
+
+
+    <div id="body-wrap">
+      <header class="nav-down"  id="wrapper">
+    <div class="container-fluid">
+       <a class="navbar-brand" href="/"><img alt="Brand" src="/assets/images/normal/logo-dark-round.png"></a>
+       <span class="nav_trigger"><i class="fa fa-bars"></i></span>
+    </div>
+</header>
+
+      
+
+<!-- jumbotron for pages -->
+
+<!-- jumbotron for post page, with feature image -->
+  
+      <div class="jumbotron jumbotron-post" style="background-image: url('/assets/images/wp-content/uploads/2015/06/pic.jpg')">
+         <div class="fullwidth-wrapper">
+    <div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12 ">
+      <div class="main-wrap">
+           <h2 class="post-title">A Design Pattern Story in Swift &#8211; Chapter 2: Observer</h2>
+            <p class="post-date">29 Jun 2015</p>
+      </div>
+    </div>
+</div>
         
-        <span class=n>sendNotificationToAll</span><span class=p>(</span><span class=n>GoodWitchMessage</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=n>name</span><span class=p>,</span> <span class=nl>type</span><span class=p>:</span> <span class=n>messageType</span><span class=p>,</span> <span class=nl>data</span><span class=p>:</span> <span class=nb>nil</span><span class=p>))</span>
-        <span class=k>return</span> <span class=n>messageType</span> <span class=o>==</span> <span class=n>WitchMessageType</span><span class=p>.</span><span class=n>IsChrystalGoodLuck</span>
-    <span class=p>}</span>
-<span class=p>}</span>
+      </div>
 
-<span class=c1>//: all that listen to her messages</span>
-<span class=k>class</span> <span class=nl>Villager</span><span class=p>:</span> <span class=n>Observer</span> <span class=p>{</span>
-    <span class=k>var</span> <span class=nl>name</span><span class=p>:</span> <span class=n>String</span>
-    <span class=k>init</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=n>String</span><span class=p>){</span>
-        <span class=nb>self</span><span class=p>.</span><span class=n>name</span> <span class=o>=</span> <span class=n>name</span>
-    <span class=p>}</span>
-    <span class=k>func</span> <span class=n>notify</span><span class=p>(</span><span class=nl>witchMessage</span><span class=p>:</span> <span class=n>WitchMessage</span><span class=p>)</span> <span class=p>{</span>
-        <span class=n>print</span><span class=p>(</span><span class=s>&quot;Villager \(name) got notified&quot;</span><span class=p>)</span>
-        <span class=n>guard</span> <span class=k>let</span> <span class=n>message</span> <span class=o>=</span> <span class=n>witchMessage</span> <span class=kt>as</span><span class=o>?</span> <span class=n>GoodWitchMessage</span> <span class=k>else</span> <span class=p>{</span>
-            <span class=n>print</span><span class=p>(</span><span class=s>&quot;This message might come from the Bad Witch&quot;</span><span class=p>)</span>
-            <span class=k>return</span>
-        <span class=p>}</span>
-        <span class=n>print</span><span class=p>(</span><span class=s>&quot;Message for \(message.name). Is Bad Luck? \(witchMessage.type)&quot;</span><span class=p>)</span>
-    <span class=p>}</span>
+  <!-- jumbotron for post page, without feature image -->
+  
+
+
+
+
+
+
+      <main class="row">
+          <div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12 ">
+              <div class="main-wrap">
+                <div class="post card post-content">
+   <p>
+  <span>In the deep forest, there is a beautiful witch who was born with the power to tell the past and future. In the beginning she was just a little girl in a nearby village. She knows everyone and whenever she sees danger in the future, she would warn the person. But soon she realized there are simply too many people to warn, and some of which don&#8217;t even want any help.</span>
+</p>
+
+<p>
+  <span>So she told the good people of the village that if they want to know her update, they can tune in to listen to her music station and they shall know the message from the music.</span>
+</p>
+
+<figure class="highlight"><pre><code class="language-swift" data-lang="swift"><span class="c1">//: Define the message  for the all parties</span>
+<span class="k">enum</span> <span class="nl">WitchMessageType</span><span class="p">:</span> <span class="n">String</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="n">IsChrystalBadLuck</span> <span class="o">=</span> <span class="s">&quot;Bad_Luck&quot;</span>
+    <span class="k">case</span> <span class="n">IsChrystalGoodLuck</span> <span class="o">=</span> <span class="s">&quot;Good_Luck&quot;</span>
+    <span class="k">case</span> <span class="n">StationCreated</span> <span class="o">=</span> <span class="s">&quot;Station_Created&quot;</span>
+    <span class="k">case</span> <span class="n">StationDestroyed</span> <span class="o">=</span> <span class="s">&quot;Station_Destroyed&quot;</span>
+<span class="p">}</span>
+<span class="k">class</span> <span class="n">WitchMessage</span> <span class="p">{</span>
+    <span class="k">let</span> <span class="nl">type</span><span class="p">:</span> <span class="n">WitchMessageType</span>
+    <span class="k">let</span> <span class="nl">data</span><span class="p">:</span> <span class="n">Any</span><span class="o">?</span>
+    <span class="k">init</span><span class="p">(</span><span class="nl">type</span><span class="p">:</span> <span class="n">WitchMessageType</span><span class="p">,</span> <span class="nl">data</span><span class="p">:</span> <span class="n">Any</span><span class="o">?</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nb">self</span><span class="p">.</span><span class="n">type</span> <span class="o">=</span> <span class="n">type</span>
+        <span class="nb">self</span><span class="p">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+
+<span class="c1">//: the Good Witch will tell everybody the name of the person she tells fortune for. Bad witch may not.</span>
+<span class="k">class</span> <span class="nl">GoodWitchMessage</span><span class="p">:</span> <span class="n">WitchMessage</span> <span class="p">{</span>
+    <span class="k">var</span> <span class="nl">name</span><span class="p">:</span> <span class="n">String</span>
+    <span class="k">var</span> <span class="nl">isBadLuck</span><span class="p">:</span> <span class="n">Bool</span> <span class="p">{</span> <span class="k">return</span> <span class="nb">self</span><span class="p">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">WitchMessageType</span><span class="p">.</span><span class="n">IsChrystalBadLuck</span> <span class="p">}</span>
     
-    <span class=k>func</span> <span class=n>logMyFortune</span><span class=p>(</span><span class=nl>fortune</span><span class=p>:</span> <span class=n>String</span><span class=p>)</span> <span class=p>{</span>
-        <span class=n>print</span><span class=p>(</span><span class=s>&quot;Log: \(fortune)&quot;</span><span class=p>)</span>
-    <span class=p>}</span>
-<span class=p>}</span>
+    <span class="k">init</span><span class="p">(</span><span class="nl">name</span><span class="p">:</span> <span class="n">String</span><span class="p">,</span> <span class="nl">type</span><span class="p">:</span> <span class="n">WitchMessageType</span><span class="p">,</span> <span class="nl">data</span><span class="p">:</span> <span class="n">Any</span><span class="o">?</span><span class="p">){</span>
+        <span class="nb">self</span><span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="nb">super</span><span class="p">.</span><span class="k">init</span><span class="p">(</span><span class="nl">type</span><span class="p">:</span> <span class="n">type</span><span class="p">,</span> <span class="nl">data</span><span class="p">:</span> <span class="n">data</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 
-<span class=k>class</span> <span class=nl>AlarmSystem</span><span class=p>:</span> <span class=n>Observer</span> <span class=p>{</span>
-    <span class=k>var</span> <span class=nl>name</span><span class=p>:</span> <span class=n>String</span>
-    <span class=k>init</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=n>String</span><span class=p>){</span>
-        <span class=nb>self</span><span class=p>.</span><span class=n>name</span> <span class=o>=</span> <span class=n>name</span>
-    <span class=p>}</span>
-    <span class=k>func</span> <span class=n>notify</span><span class=p>(</span><span class=nl>witchMessage</span><span class=p>:</span> <span class=n>WitchMessage</span><span class=p>)</span> <span class=p>{</span>
-        <span class=n>print</span><span class=p>(</span><span class=s>&quot;\(name) got notified&quot;</span><span class=p>)</span>
-        <span class=n>guard</span> <span class=k>let</span> <span class=n>message</span> <span class=o>=</span> <span class=n>witchMessage</span> <span class=kt>as</span><span class=o>?</span> <span class=n>GoodWitchMessage</span> <span class=k>else</span> <span class=p>{</span>
-            <span class=n>print</span><span class=p>(</span><span class=s>&quot;This message might come from the Bad Witch&quot;</span><span class=p>)</span>
-            <span class=k>return</span>
-        <span class=p>}</span>
-        <span class=k>if</span> <span class=n>witchMessage</span><span class=p>.</span><span class=n>type</span> <span class=o>==</span> <span class=n>WitchMessageType</span><span class=p>.</span><span class=n>IsChrystalBadLuck</span>  <span class=p>{</span>
-            <span class=n>print</span><span class=p>(</span><span class=s>&quot;Something unfortunate will happen to \(message.name). An alarm is being sent out&quot;</span><span class=p>)</span>
-        <span class=p>}</span>
-    <span class=p>}</span>
-<span class=p>}</span>
+<span class="c1">// People who listen to her music station are observers</span>
+<span class="k">protocol</span> <span class="n">Observer</span> <span class="p">{</span>
+    <span class="k">var</span> <span class="nl">name</span><span class="p">:</span><span class="n">String</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
+    <span class="k">func</span> <span class="n">notify</span><span class="p">(</span><span class="nl">witchMessage</span><span class="p">:</span> <span class="n">WitchMessage</span><span class="p">)</span>
+<span class="p">}</span>
 
-<span class=k>class</span> <span class=nl>Hero</span><span class=p>:</span> <span class=n>Observer</span> <span class=p>{</span>
-    <span class=k>var</span> <span class=nl>name</span><span class=p>:</span> <span class=n>String</span>
-    <span class=k>init</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=n>String</span><span class=p>){</span>
-        <span class=nb>self</span><span class=p>.</span><span class=n>name</span> <span class=o>=</span> <span class=n>name</span>
-    <span class=p>}</span>
-    <span class=k>func</span> <span class=n>notify</span><span class=p>(</span><span class=nl>witchMessage</span><span class=p>:</span> <span class=n>WitchMessage</span><span class=p>)</span> <span class=p>{</span>
-        <span class=n>print</span><span class=p>(</span><span class=s>&quot;Hero got notified&quot;</span><span class=p>)</span>
-        <span class=k>if</span> <span class=n>witchMessage</span><span class=p>.</span><span class=n>type</span> <span class=o>==</span> <span class=n>WitchMessageType</span><span class=p>.</span><span class=n>IsChrystalBadLuck</span> <span class=p>{</span>
-            <span class=n>saveTheUnfortunate</span><span class=p>()</span>
-        <span class=p>}</span>
-    <span class=p>}</span>
-    <span class=k>func</span> <span class=n>saveTheUnfortunate</span><span class=p>()</span> <span class=p>{</span>
-        <span class=n>print</span><span class=p>(</span><span class=s>&quot;A hero will come to save you&quot;</span><span class=p>)</span>
-    <span class=p>}</span>
-<span class=p>}</span>
 
-<span class=c1>//: Test the system</span>
-<span class=k>let</span> <span class=n>jane</span> <span class=o>=</span> <span class=n>Villager</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=s>&quot;Jane&quot;</span><span class=p>)</span>
-<span class=k>let</span> <span class=n>alarm</span> <span class=o>=</span> <span class=n>AlarmSystem</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=s>&quot;Alarm System&quot;</span><span class=p>)</span>
-<span class=k>let</span> <span class=n>jack</span> <span class=o>=</span> <span class=n>Hero</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=s>&quot;Hero Jack&quot;</span><span class=p>)</span>
+<span class="k">extension</span> <span class="n">CustomStringConvertible</span> <span class="k">where</span> <span class="nl">Self</span><span class="p">:</span> <span class="n">Observer</span> <span class="p">{</span>
+    <span class="k">var</span> <span class="nl">description</span><span class="p">:</span> <span class="n">String</span> <span class="p">{</span> <span class="k">return</span> <span class="nb">self</span><span class="p">.</span><span class="n">name</span> <span class="p">}</span>
+<span class="p">}</span>
 
-<span class=k>let</span> <span class=n>witchStation</span> <span class=o>=</span> <span class=n>WitchStation</span><span class=p>()</span>
-<span class=n>witchStation</span><span class=p>.</span><span class=n>addObserver</span><span class=p>(</span><span class=n>jane</span><span class=p>,</span> <span class=n>alarm</span><span class=p>,</span> <span class=n>jack</span><span class=p>)</span>
-<span class=n>print</span><span class=p>(</span><span class=n>witchStation</span><span class=p>.</span><span class=n>description</span><span class=p>)</span>
-<span class=n>print</span><span class=p>(</span><span class=s>&quot;--check luck for Nicole ---&quot;</span><span class=p>)</span>
-<span class=n>witchStation</span><span class=p>.</span><span class=n>checkCrystalBall</span><span class=p>(</span><span class=s>&quot;Nicole&quot;</span><span class=p>)</span>
 
-<span class=n>print</span><span class=p>(</span><span class=s>&quot;---check luck for Mia --&quot;</span><span class=p>)</span>
-<span class=n>witchStation</span><span class=p>.</span><span class=n>checkCrystalBall</span><span class=p>(</span><span class=s>&quot;Mia&quot;</span><span class=p>)</span></code></pre></figure><p>&nbsp;</p><p><a href=/assets/images/wp-content/uploads/2015/06/Observer-Pattern.png><img class="aligncenter size-full wp-image-962" src=/assets/images/wp-content/uploads/2015/06/Observer-Pattern.png alt="Observer Pattern" width=489 height=227></a></p><p>&nbsp;</p><p><a href=https://hdwallpapers.cat/do_not_listen_to_him_forest_girl_fruit_hd-wallpaper-1852331/ >Image</a></p></div><div class=card><div class=page-nav><div><a class=prev href=/2015/06/09/a-design-pattern-story-chapter-1-strategy/ ><i class="fa fa-angle-left"></i></a> <a class=prev href=/2015/06/09/a-design-pattern-story-chapter-1-strategy/ >A Design Pattern Story in Swift- Chapter 1: Strategy</a></div><div><a class=next href=/2015/06/29/strategy-design-pattern-updated-using-protocol-extension-in-swift-2-0/ >Strategy Design Pattern Updated Using Protocol Extension in Swift 2.0 </a><a class=prev href=/2015/06/29/strategy-design-pattern-updated-using-protocol-extension-in-swift-2-0/ ><i class="fa fa-angle-right"></i></a></div></div></div><div class="related card"><h2>Related Posts</h2><ul class=related-posts><li><h4><a href=/general/2015/11/11/singles-day/ >Singles Day <small>11 Nov 2015</small></a></h4></li><li><h4><a href=/jekyll/2015/09/27/relocating-my-blog-from-wordpress-to-Jekyll/ >Relocating My Blog from Wordpress to Jekyll <small>27 Sep 2015</small></a></h4></li><li><h4><a href=/2015/07/18/a-design-pattern-story-in-swift-chapter-21-interpretor/ >A Design Pattern Story in Swift – Chapter 21: Interpretor <small>18 Jul 2015</small></a></h4></li></ul></div><div class=card><div id=disqus_thread></div><script type=text/javascript>var disqus_shortname = 'audreyli';
+<span class="k">protocol</span> <span class="n">Station</span> <span class="p">{</span>
+    <span class="k">func</span> <span class="n">addObserver</span><span class="p">(</span><span class="nl">observers</span><span class="p">:</span> <span class="n">Observer</span><span class="p">...)</span>
+    <span class="k">func</span> <span class="n">removerObserver</span><span class="p">(</span><span class="nl">observer</span><span class="p">:</span> <span class="n">Observer</span><span class="p">)</span>
+<span class="p">}</span>
+
+
+<span class="k">class</span> <span class="nl">BaseStation</span><span class="p">:</span> <span class="n">Station</span><span class="p">,</span> <span class="n">CustomStringConvertible</span> <span class="p">{</span>
+    <span class="n">private</span> <span class="k">var</span> <span class="nl">observers</span><span class="p">:</span> <span class="p">[</span><span class="n">Observer</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">var</span> <span class="nl">description</span><span class="p">:</span> <span class="n">String</span> <span class="p">{</span> <span class="k">return</span> <span class="s">&quot;I am a Station and my observers are: \(observers)&quot;</span> <span class="p">}</span>
+    <span class="n">private</span> <span class="k">var</span> <span class="n">orderedQueue</span> <span class="o">=</span> <span class="n">dispatch_queue_create</span><span class="p">(</span><span class="s">&quot;orQ&quot;</span><span class="p">,</span> <span class="n">DISPATCH_QUEUE_CONCURRENT</span><span class="p">)</span>
+    
+    <span class="c1">//: She can only add or remove one person at a time</span>
+    <span class="k">func</span> <span class="n">addObserver</span><span class="p">(</span><span class="nl">observers</span><span class="p">:</span> <span class="n">Observer</span><span class="p">...)</span> <span class="p">{</span>
+        <span class="n">dispatch_barrier_sync</span><span class="p">(</span><span class="n">orderedQueue</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">observers</span><span class="p">.</span><span class="n">map</span> <span class="p">{</span> <span class="nb">self</span><span class="p">.</span><span class="n">observers</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="err">$</span><span class="mi">0</span><span class="p">)</span> <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    
+    
+    <span class="k">func</span> <span class="n">removerObserver</span><span class="p">(</span><span class="nl">observer</span><span class="p">:</span> <span class="n">Observer</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">dispatch_barrier_sync</span><span class="p">(</span><span class="n">orderedQueue</span><span class="p">)</span> <span class="p">{</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Void</span> <span class="k">in</span>
+            <span class="nb">self</span><span class="p">.</span><span class="n">observers</span><span class="p">.</span><span class="n">filter</span><span class="p">{</span> <span class="err">$</span><span class="mf">0.</span><span class="n">name</span> <span class="o">==</span> <span class="n">observer</span><span class="p">.</span><span class="n">name</span><span class="p">}</span>
+            <span class="n">print</span><span class="p">(</span><span class="s">&quot;removed observer \(observer.name)&quot;</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">func</span> <span class="n">sendNotificationToAll</span><span class="p">(</span><span class="nl">witchMessage</span><span class="p">:</span> <span class="n">WitchMessage</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">dispatch_sync</span><span class="p">(</span><span class="n">orderedQueue</span><span class="p">)</span> <span class="p">{</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Void</span> <span class="k">in</span>
+            <span class="nb">self</span><span class="p">.</span><span class="n">observers</span><span class="p">.</span><span class="n">map</span><span class="p">{</span> <span class="err">$</span><span class="mf">0.</span><span class="n">notify</span><span class="p">(</span><span class="n">witchMessage</span><span class="p">)</span> <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nl">WitchStation</span><span class="p">:</span> <span class="n">BaseStation</span> <span class="p">{</span>
+    
+    <span class="k">func</span> <span class="n">checkCrystalBall</span><span class="p">(</span><span class="nl">name</span><span class="p">:</span> <span class="n">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Bool</span> <span class="p">{</span>
+        <span class="k">var</span> <span class="n">messageType</span> <span class="o">=</span> <span class="n">WitchMessageType</span><span class="p">.</span><span class="n">IsChrystalGoodLuck</span>
+        
+        <span class="k">if</span> <span class="n">RandomYesOrNoGeneratorByInt</span><span class="p">.</span><span class="n">random</span><span class="p">()</span> <span class="p">{</span>
+            <span class="n">print</span><span class="p">(</span><span class="s">&quot;Witch Tell: Good luck ahead&quot;</span><span class="p">)</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="n">messageType</span> <span class="o">=</span> <span class="n">WitchMessageType</span><span class="p">.</span><span class="n">IsChrystalBadLuck</span>
+            <span class="n">print</span><span class="p">(</span><span class="s">&quot;Witch Tell: Bad luck ahead&quot;</span><span class="p">)</span>
+        <span class="p">}</span>
+        
+        <span class="n">sendNotificationToAll</span><span class="p">(</span><span class="n">GoodWitchMessage</span><span class="p">(</span><span class="nl">name</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span> <span class="nl">type</span><span class="p">:</span> <span class="n">messageType</span><span class="p">,</span> <span class="nl">data</span><span class="p">:</span> <span class="nb">nil</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">messageType</span> <span class="o">==</span> <span class="n">WitchMessageType</span><span class="p">.</span><span class="n">IsChrystalGoodLuck</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">//: all that listen to her messages</span>
+<span class="k">class</span> <span class="nl">Villager</span><span class="p">:</span> <span class="n">Observer</span> <span class="p">{</span>
+    <span class="k">var</span> <span class="nl">name</span><span class="p">:</span> <span class="n">String</span>
+    <span class="k">init</span><span class="p">(</span><span class="nl">name</span><span class="p">:</span> <span class="n">String</span><span class="p">){</span>
+        <span class="nb">self</span><span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+    <span class="p">}</span>
+    <span class="k">func</span> <span class="n">notify</span><span class="p">(</span><span class="nl">witchMessage</span><span class="p">:</span> <span class="n">WitchMessage</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">print</span><span class="p">(</span><span class="s">&quot;Villager \(name) got notified&quot;</span><span class="p">)</span>
+        <span class="n">guard</span> <span class="k">let</span> <span class="n">message</span> <span class="o">=</span> <span class="n">witchMessage</span> <span class="kt">as</span><span class="o">?</span> <span class="n">GoodWitchMessage</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="n">print</span><span class="p">(</span><span class="s">&quot;This message might come from the Bad Witch&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="p">}</span>
+        <span class="n">print</span><span class="p">(</span><span class="s">&quot;Message for \(message.name). Is Bad Luck? \(witchMessage.type)&quot;</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="k">func</span> <span class="n">logMyFortune</span><span class="p">(</span><span class="nl">fortune</span><span class="p">:</span> <span class="n">String</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">print</span><span class="p">(</span><span class="s">&quot;Log: \(fortune)&quot;</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nl">AlarmSystem</span><span class="p">:</span> <span class="n">Observer</span> <span class="p">{</span>
+    <span class="k">var</span> <span class="nl">name</span><span class="p">:</span> <span class="n">String</span>
+    <span class="k">init</span><span class="p">(</span><span class="nl">name</span><span class="p">:</span> <span class="n">String</span><span class="p">){</span>
+        <span class="nb">self</span><span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+    <span class="p">}</span>
+    <span class="k">func</span> <span class="n">notify</span><span class="p">(</span><span class="nl">witchMessage</span><span class="p">:</span> <span class="n">WitchMessage</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">print</span><span class="p">(</span><span class="s">&quot;\(name) got notified&quot;</span><span class="p">)</span>
+        <span class="n">guard</span> <span class="k">let</span> <span class="n">message</span> <span class="o">=</span> <span class="n">witchMessage</span> <span class="kt">as</span><span class="o">?</span> <span class="n">GoodWitchMessage</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="n">print</span><span class="p">(</span><span class="s">&quot;This message might come from the Bad Witch&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="n">witchMessage</span><span class="p">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">WitchMessageType</span><span class="p">.</span><span class="n">IsChrystalBadLuck</span>  <span class="p">{</span>
+            <span class="n">print</span><span class="p">(</span><span class="s">&quot;Something unfortunate will happen to \(message.name). An alarm is being sent out&quot;</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nl">Hero</span><span class="p">:</span> <span class="n">Observer</span> <span class="p">{</span>
+    <span class="k">var</span> <span class="nl">name</span><span class="p">:</span> <span class="n">String</span>
+    <span class="k">init</span><span class="p">(</span><span class="nl">name</span><span class="p">:</span> <span class="n">String</span><span class="p">){</span>
+        <span class="nb">self</span><span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+    <span class="p">}</span>
+    <span class="k">func</span> <span class="n">notify</span><span class="p">(</span><span class="nl">witchMessage</span><span class="p">:</span> <span class="n">WitchMessage</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">print</span><span class="p">(</span><span class="s">&quot;Hero got notified&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">witchMessage</span><span class="p">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">WitchMessageType</span><span class="p">.</span><span class="n">IsChrystalBadLuck</span> <span class="p">{</span>
+            <span class="n">saveTheUnfortunate</span><span class="p">()</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">func</span> <span class="n">saveTheUnfortunate</span><span class="p">()</span> <span class="p">{</span>
+        <span class="n">print</span><span class="p">(</span><span class="s">&quot;A hero will come to save you&quot;</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">//: Test the system</span>
+<span class="k">let</span> <span class="n">jane</span> <span class="o">=</span> <span class="n">Villager</span><span class="p">(</span><span class="nl">name</span><span class="p">:</span> <span class="s">&quot;Jane&quot;</span><span class="p">)</span>
+<span class="k">let</span> <span class="n">alarm</span> <span class="o">=</span> <span class="n">AlarmSystem</span><span class="p">(</span><span class="nl">name</span><span class="p">:</span> <span class="s">&quot;Alarm System&quot;</span><span class="p">)</span>
+<span class="k">let</span> <span class="n">jack</span> <span class="o">=</span> <span class="n">Hero</span><span class="p">(</span><span class="nl">name</span><span class="p">:</span> <span class="s">&quot;Hero Jack&quot;</span><span class="p">)</span>
+
+<span class="k">let</span> <span class="n">witchStation</span> <span class="o">=</span> <span class="n">WitchStation</span><span class="p">()</span>
+<span class="n">witchStation</span><span class="p">.</span><span class="n">addObserver</span><span class="p">(</span><span class="n">jane</span><span class="p">,</span> <span class="n">alarm</span><span class="p">,</span> <span class="n">jack</span><span class="p">)</span>
+<span class="n">print</span><span class="p">(</span><span class="n">witchStation</span><span class="p">.</span><span class="n">description</span><span class="p">)</span>
+<span class="n">print</span><span class="p">(</span><span class="s">&quot;--check luck for Nicole ---&quot;</span><span class="p">)</span>
+<span class="n">witchStation</span><span class="p">.</span><span class="n">checkCrystalBall</span><span class="p">(</span><span class="s">&quot;Nicole&quot;</span><span class="p">)</span>
+
+<span class="n">print</span><span class="p">(</span><span class="s">&quot;---check luck for Mia --&quot;</span><span class="p">)</span>
+<span class="n">witchStation</span><span class="p">.</span><span class="n">checkCrystalBall</span><span class="p">(</span><span class="s">&quot;Mia&quot;</span><span class="p">)</span></code></pre></figure>
+
+<p>&nbsp;</p>
+
+<p><a href="/assets/images/wp-content/uploads/2015/06/Observer-Pattern.png"><img class="aligncenter size-full wp-image-962" src="/assets/images/wp-content/uploads/2015/06/Observer-Pattern.png" alt="Observer Pattern" width="489" height="227" /></a></p>
+
+<p>&nbsp;</p>
+
+<p><a href="https://hdwallpapers.cat/do_not_listen_to_him_forest_girl_fruit_hd-wallpaper-1852331/">Image</a></p>
+
+ </div>
+ <div class="card">
+   <div class="page-nav">
+    <div>
+        
+         <a class="prev" href="/2015/06/09/a-design-pattern-story-chapter-1-strategy/"> <i class="fa fa-angle-left"></i></a> 
+          <a class="prev" href="/2015/06/09/a-design-pattern-story-chapter-1-strategy/"> A Design Pattern Story in Swift- Chapter 1: Strategy</a>
+        
+    </div>
+    <div>
+        
+          <a class="next" href="/2015/06/29/strategy-design-pattern-updated-using-protocol-extension-in-swift-2-0/">Strategy Design Pattern Updated Using Protocol Extension in Swift 2.0 </a>
+         <a class="prev" href="/2015/06/29/strategy-design-pattern-updated-using-protocol-extension-in-swift-2-0/"> <i class="fa fa-angle-right"></i></a> 
+        
+    </div>
+</div>
+
+
+
+ </div>
+ <div class="related card">
+   <h2>Related Posts</h2>
+   <ul class="related-posts">
+     
+       <li>
+         <h4>
+           <a href="/general/2015/11/11/singles-day/">
+             Singles Day
+             <small>11 Nov 2015</small>
+           </a>
+         </h4>
+       </li>
+     
+       <li>
+         <h4>
+           <a href="/jekyll/2015/09/27/relocating-my-blog-from-wordpress-to-Jekyll/">
+             Relocating My Blog from Wordpress to Jekyll
+             <small>27 Sep 2015</small>
+           </a>
+         </h4>
+       </li>
+     
+       <li>
+         <h4>
+           <a href="/2015/07/18/a-design-pattern-story-in-swift-chapter-21-interpretor/">
+             A Design Pattern Story in Swift – Chapter 21: Interpretor
+             <small>18 Jul 2015</small>
+           </a>
+         </h4>
+       </li>
+     
+   </ul>
+ </div>
+ <div class="card">
+ <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'audreyli';
     
     (function() {
         var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
         dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
         (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-    })();</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript rel=nofollow>comments powered by Disqus.</a></noscript></div></div></div></main><footer class=row><div class="col-md-8 col-md-offset-2 text-center"><a href=http://audreyli.me>&copy; Copyright 2015 &nbsp; &nbsp; AudreyLi.me &nbsp; &nbsp;</a> <a href=/archives>Archives &nbsp; &nbsp; </a><a href=https://github.com/vidaaudrey title="Audrey's Github"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-github fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.linkedin.com/in/audreyauli title="Audrey's Google Plus"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i> </span></a><a href=/feed.xml title="RSS Feed"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-rss fa-stack-1x fa-inverse"></i></span></a></div></footer><script src=https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js></script><script src=https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/js/bootstrap.js></script><script src=/assets/javascript/index.js></script></div><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+ </div>
+ 
+
+      
+    
+
+
+
+
+              </div>
+          </div>
+          
+      </main>
+      <footer class="row">
+    <div class="col-md-8 col-md-offset-2 text-center">
+        <a href="http://audreyli.me">  &copy; Copyright 2015 &nbsp; &nbsp; AudreyLi.me &nbsp; &nbsp;</a> 
+       
+        <a href="/archives">Archives &nbsp; &nbsp; </a>
+        <a href="https://github.com/vidaaudrey" title="Audrey's Github">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+    
+        <a href="https://www.linkedin.com/in/audreyauli" title="Audrey's Google Plus">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+        
+        <a href="/feed.xml" title="RSS Feed">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+    </div>
+    
+</footer>
+
+      
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js"></script>
+<script src="https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/js/bootstrap.js"></script>
+
+<!-- inject:js -->
+<script src="/assets/javascript/index.js"></script>
+<!-- endinject -->
+
+  </div>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
     })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
     ga('create', 'UA-68084914-1', 'auto');
-    ga('send', 'pageview');</script></body></html>
+    ga('send', 'pageview');
+
+  </script>
+  </body>
+</html>

@@ -1,121 +1,385 @@
-<!DOCTYPE html><html xmlns=http://www.w3.org/1999/xhtml xml:lang=en lang=en-us><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><title>A Design Pattern Story in Swift – Chapter 6: Command</title><meta name=description content="If you command wisely, you’ll be obeyed cheerfully.  — Thomas Fuller"><link rel=canonical href=http://audreyli.me/2015/07/03/a-design-pattern-story-in-swift-chapter-6-command/ ><link rel=stylesheet href="http://fonts.googleapis.com/css?family=RobotoDraft:100,300,400|Roboto:300,300italic,400"><link rel=stylesheet href=https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/css/bootstrap.css><link rel=stylesheet href=https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css><link rel=stylesheet href=/assets/stylesheets/style-b5460305d5.min.css><link rel="shortcut icon" href=/assets/favicon.ico><link rel=apple-touch-icon sizes=57x57 href=/assets/images/favicons/apple-touch-icon-57x57.png><link rel=apple-touch-icon sizes=60x60 href=/assets/images/favicons/apple-touch-icon-60x60.png><link rel=apple-touch-icon sizes=72x72 href=/assets/images/favicons/apple-touch-icon-72x72.png><link rel=apple-touch-icon sizes=76x76 href=/assets/images/favicons/apple-touch-icon-76x76.png><link rel=apple-touch-icon sizes=114x114 href=/assets/images/favicons/apple-touch-icon-114x114.png><link rel=apple-touch-icon sizes=120x120 href=/assets/images/favicons/apple-touch-icon-120x120.png><link rel=apple-touch-icon sizes=144x144 href=/assets/images/favicons/apple-touch-icon-144x144.png><link rel=apple-touch-icon sizes=152x152 href=/assets/images/favicons/apple-touch-icon-152x152.png><link rel=apple-touch-icon sizes=180x180 href=/assets/images/favicons/apple-touch-icon-180x180.png><link rel=icon type=image/png href=/assets/images/favicons/favicon-32x32.png sizes=32x32><link type=application/atom+xml rel=alternate href=http://audreyli.me/feed.xml title=vidaaudrey-blog></head><body><nav id=push_sidebar><div class=social-icons><img src=/assets/images/audrey-li.jpg alt="Audrey's Photo" class=img-circle> <a href=https://github.com/vidaaudrey title="Audrey's Github"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-github fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.facebook.com/audreyauli title="Audrey's Facebook"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-facebook fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.linkedin.com/in/audreyauli title="Audrey's Google Plus"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i> </span></a><a href=/assets/images/wechat.jpg title="Audrey's Wechat"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-weixin fa-stack-1x fa-inverse"></i></span></a></div><ul><li><a href=/ >Home</a></li><li><a href=/portfolio>Portfolio</a></li><li><a href=/archives>Archives</a></li><li><a href=/atom.xml>Feed</a></li><li class=rss-subscribe>subscribe <a href=feed.xml>via RSS</a></li><li><a href=/about>About</a></li></ul></nav><div id=body-wrap><header class=nav-down id=wrapper><div class=container-fluid><a class=navbar-brand href=/ ><img alt=Brand src=/assets/images/normal/logo-dark-round.png></a><span class=nav_trigger><i class="fa fa-bars"></i></span></div></header><div class="jumbotron jumbotron-post" style="background-image: url('/assets/images/wp-content/uploads/2015/07/nap-1080x675.png')"><div class=fullwidth-wrapper><div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12"><div class=main-wrap><h2 class=post-title>A Design Pattern Story in Swift – Chapter 6: Command</h2><p class=post-date>03 Jul 2015</p></div></div></div></div><main class=row><div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12"><div class=main-wrap><div class="post card post-content"><p><span>If you command wisely, you&#8217;ll be obeyed cheerfully.<span class=Apple-converted-space>  </span>&#8212; <em>Thomas Fuller</em></span></p><div class=page title="Page 393"><div class=layoutArea><div class=column><p>The command pattern is used to encapsulate details of how to invoke a method on an object in a way that allows the method to be invoked at a different time or by a different component. (<em>Design Pattern in Swift)</em></p><figure class=highlight><pre><code class=language-swift data-lang=swift><span class=k>protocol</span> <span class=n>Command</span> <span class=p>{</span>
-    <span class=k>func</span> <span class=n>execute</span><span class=p>(</span><span class=nl>receiver</span><span class=p>:</span> <span class=n>Any</span><span class=p>)</span>
-<span class=p>}</span>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<span class=c1>//: A generic command can handle different kind of commands</span>
-<span class=k>class</span> <span class=n>GenericCommand</span><span class=o>&amp;</span><span class=n>lt</span><span class=p>;</span><span class=n>T</span><span class=o>&gt;:</span> <span class=n>Command</span> <span class=p>{</span>
-    <span class=n>private</span> <span class=k>var</span> <span class=nl>instruction</span><span class=p>:</span> <span class=n>T</span> <span class=o>-&gt;</span> <span class=n>Void</span>
-    <span class=k>init</span><span class=p>(</span><span class=nl>instruction</span><span class=p>:</span> <span class=n>T</span> <span class=o>-&gt;</span> <span class=n>Void</span><span class=p>){</span>
-        <span class=nb>self</span><span class=p>.</span><span class=n>instruction</span> <span class=o>=</span> <span class=n>instruction</span>
-    <span class=p>}</span>
-    <span class=k>func</span> <span class=n>execute</span><span class=p>(</span><span class=nl>receiver</span><span class=p>:</span> <span class=n>Any</span><span class=p>)</span> <span class=p>{</span>
-        <span class=n>guard</span> <span class=k>let</span> <span class=n>safeReceiver</span> <span class=o>=</span> <span class=n>receiver</span> <span class=kt>as</span><span class=o>?</span> <span class=n>T</span> <span class=k>else</span> <span class=p>{</span>
-            <span class=n>fatalError</span><span class=p>(</span><span class=s>&quot;Receiver is not an expected type&quot;</span><span class=p>)</span>
-        <span class=p>}</span>
-        <span class=n>instruction</span><span class=p>(</span><span class=n>safeReceiver</span><span class=p>)</span>
-    <span class=p>}</span>
-    <span class=k>class</span> <span class=k>func</span> <span class=n>createCommand</span><span class=p>(</span><span class=nl>instruction</span><span class=p>:</span> <span class=n>T</span> <span class=o>-&gt;</span> <span class=n>Void</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Command</span> <span class=p>{</span>
-        <span class=k>return</span> <span class=n>GenericCommand</span><span class=p>(</span><span class=nl>instruction</span><span class=p>:</span> <span class=n>instruction</span><span class=p>)</span>
-    <span class=p>}</span>
-<span class=p>}</span>
+  <title>A Design Pattern Story in Swift – Chapter 6: Command</title>
+  <meta name="description" content="If you command wisely, you’ll be obeyed cheerfully.  — Thomas Fuller">
+  <link rel="canonical" href="http://audreyli.me/2015/07/03/a-design-pattern-story-in-swift-chapter-6-command/">
+  
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=RobotoDraft:100,300,400|Roboto:300,300italic,400">
+  <!-- Boostrap -->
+  <link rel="stylesheet" href="https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/css/bootstrap.css">
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+  
+  <!-- inject:css -->
+  <link rel="stylesheet" href="/assets/stylesheets/style.css">
+  <!-- endinject -->
 
-<span class=k>protocol</span> <span class=n>LatestCommand</span> <span class=p>{</span>
-    <span class=k>func</span> <span class=n>executeLatestCommand</span><span class=p>(</span><span class=nl>receiver</span><span class=p>:</span> <span class=n>Any</span><span class=p>)</span>
-<span class=p>}</span>
+  <!-- Icons -->
+  <link rel="shortcut icon" href="/assets/favicon.ico">
+  <link rel="apple-touch-icon" sizes="57x57" href="/assets/images/favicons/apple-touch-icon-57x57.png">
+  <link rel="apple-touch-icon" sizes="60x60" href="/assets/images/favicons/apple-touch-icon-60x60.png">
+  <link rel="apple-touch-icon" sizes="72x72" href="/assets/images/favicons/apple-touch-icon-72x72.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="/assets/images/favicons/apple-touch-icon-76x76.png">
+  <link rel="apple-touch-icon" sizes="114x114" href="/assets/images/favicons/apple-touch-icon-114x114.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="/assets/images/favicons/apple-touch-icon-120x120.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="/assets/images/favicons/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="/assets/images/favicons/apple-touch-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/favicons/apple-touch-icon-180x180.png">
+  <link rel="icon" type="image/png" href="/assets/images/favicons/favicon-32x32.png" sizes="32x32">
 
-<span class=c1>//: A commandWrapper manages the execution of multiple commands or the lastest command</span>
-<span class=k>class</span> <span class=nl>CommandWrapper</span><span class=p>:</span> <span class=n>Command</span><span class=p>,</span> <span class=n>LatestCommand</span> <span class=p>{</span>
-    <span class=n>private</span> <span class=k>let</span> <span class=nl>commands</span><span class=p>:</span> <span class=p>[</span><span class=n>Command</span><span class=p>]</span>
-    <span class=n>private</span> <span class=k>var</span> <span class=nl>remainingCommands</span><span class=p>:[</span><span class=n>Command</span><span class=p>]</span>
-    <span class=k>init</span><span class=p>(</span><span class=nl>commands</span><span class=p>:</span> <span class=p>[</span><span class=n>Command</span><span class=p>]){</span>
-        <span class=nb>self</span><span class=p>.</span><span class=n>commands</span> <span class=o>=</span> <span class=n>commands</span>
-        <span class=nb>self</span><span class=p>.</span><span class=n>remainingCommands</span> <span class=o>=</span> <span class=n>commands</span>
-    <span class=p>}</span>
-    <span class=k>func</span> <span class=n>execute</span><span class=p>(</span><span class=nl>receiver</span><span class=p>:</span> <span class=n>Any</span><span class=p>)</span> <span class=p>{</span>
-        <span class=n>print</span><span class=p>(</span><span class=s>&quot;will excute all commands for \(receiver)&quot;</span><span class=p>)</span>
-        <span class=n>commands</span><span class=p>.</span><span class=n>map</span><span class=p>{</span><span class=err>$</span><span class=mf>0.</span><span class=n>execute</span><span class=p>(</span><span class=n>receiver</span><span class=p>)}</span>
+  <!-- RSS -->
+  <link type="application/atom+xml" rel="alternate" href="http://audreyli.me/feed.xml" title="vidaaudrey-blog" />
+</head>
+
+  
+  <body>
+    <nav id="push_sidebar">
+    <div class="social-icons">
+        <img src="/assets/images/audrey-li.jpg" alt="Audrey's Photo" class="img-circle">
+
+        <a href="https://github.com/vidaaudrey" title="Audrey's Github">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+        <a href="https://www.facebook.com/audreyauli" title="Audrey's Facebook">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-facebook fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+
+        <a href="https://www.linkedin.com/in/audreyauli" title="Audrey's Google Plus">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
         
-    <span class=p>}</span>
-    <span class=k>func</span> <span class=n>executeLatestCommand</span><span class=p>(</span><span class=nl>receiver</span><span class=p>:</span> <span class=n>Any</span><span class=p>){</span>
-        <span class=n>print</span><span class=p>(</span><span class=s>&quot;will execute the lastest command for \(receiver)&quot;</span><span class=p>)</span>
-        <span class=n>remainingCommands</span><span class=p>.</span><span class=n>removeLast</span><span class=p>().</span><span class=n>execute</span><span class=p>(</span><span class=n>receiver</span><span class=p>)</span>
-        <span class=n>print</span><span class=p>(</span><span class=s>&quot;\(remainingCommands.count) commands left.&quot;</span><span class=p>)</span>
-    <span class=p>}</span>
-<span class=p>}</span>
+        <a href="/assets/images/wechat.jpg" title="Audrey's Wechat">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-weixin fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
 
-<span class=k>class</span> <span class=nl>PeopleStandByCommand</span><span class=p>:</span> <span class=n>Command</span> <span class=p>{</span>
-    <span class=k>func</span> <span class=n>execute</span><span class=p>(</span><span class=nl>receiver</span><span class=p>:</span> <span class=n>Any</span><span class=p>)</span> <span class=p>{</span>
-        <span class=n>print</span><span class=p>(</span><span class=s>&quot;All people standby&quot;</span><span class=p>)</span>
-    <span class=p>}</span>
-<span class=p>}</span>
-<span class=k>class</span> <span class=nl>PrepareWeaponCommand</span><span class=p>:</span> <span class=n>Command</span> <span class=p>{</span>
-    <span class=k>func</span> <span class=n>execute</span><span class=p>(</span><span class=nl>receiver</span><span class=p>:</span> <span class=n>Any</span><span class=p>)</span> <span class=p>{</span>
-        <span class=n>print</span><span class=p>(</span><span class=s>&quot;Weapons are ready&quot;</span><span class=p>)</span>
-    <span class=p>}</span>
-<span class=p>}</span>
+    </div>
 
-<span class=k>class</span> <span class=nl>PrepareResourcesCommand</span><span class=p>:</span> <span class=n>Command</span> <span class=p>{</span>
-    <span class=k>func</span> <span class=n>execute</span><span class=p>(</span><span class=nl>receiver</span><span class=p>:</span> <span class=n>Any</span><span class=p>)</span> <span class=p>{</span>
-        <span class=n>print</span><span class=p>(</span><span class=s>&quot;All resources are ready&quot;</span><span class=p>)</span>
-    <span class=p>}</span>
-<span class=p>}</span>
+    <ul>
+      <li><a href="/">Home</a></li>
+      <li><a href="/portfolio">Portfolio</a></li>
+      <li><a href="/archives">Archives</a></li>
+      <li><a href="/atom.xml">Feed</a></li>
+      <li class="rss-subscribe">subscribe <a href="feed.xml">via RSS</a></li>
+      <li><a href="/about">About</a></li>
+    </ul>
+</nav>
 
-<span class=c1>//: An operation that has manages the preparation of the war. It creates multiple commands which will be executed at runtime</span>
-<span class=k>class</span> <span class=nl>PrepareForWarOperation</span><span class=p>:</span><span class=n>CustomStringConvertible</span> <span class=p>{</span>
-    <span class=n>private</span> <span class=k>var</span> <span class=nl>commands</span><span class=p>:[</span><span class=n>Command</span><span class=p>]</span> <span class=o>=</span> <span class=p>[]</span>
-    <span class=n>private</span> <span class=k>var</span> <span class=n>queue</span> <span class=o>=</span> <span class=n>dispatch_queue_create</span><span class=p>(</span><span class=s>&quot;arrayQueue&quot;</span><span class=p>,</span> <span class=n>DISPATCH_QUEUE_SERIAL</span><span class=p>)</span>
-    <span class=k>var</span> <span class=nl>name</span><span class=p>:</span> <span class=n>String</span>
-    <span class=k>var</span> <span class=nl>description</span><span class=p>:</span> <span class=n>String</span> <span class=p>{</span> <span class=k>return</span> <span class=n>name</span> <span class=p>}</span>
-    <span class=k>init</span><span class=p>(</span><span class=nl>kindom</span><span class=p>:</span> <span class=n>String</span><span class=p>){</span>
-        <span class=n>print</span><span class=p>(</span><span class=s>&quot;PrepareForWar Operation for \(kindom) is created&quot;</span><span class=p>)</span>
-        <span class=nb>self</span><span class=p>.</span><span class=n>name</span> <span class=o>=</span> <span class=n>kindom</span>
-        <span class=n>prepareEverything</span><span class=p>()</span>
-    <span class=p>}</span>
-    <span class=k>func</span> <span class=n>notifyPeople</span><span class=p>(</span><span class=nl>people</span><span class=p>:</span> <span class=n>String</span><span class=p>){</span>
-        <span class=n>print</span><span class=p>(</span><span class=s>&quot;Notified \(people) about the war&quot;</span><span class=p>)</span>
-    <span class=p>}</span>
+
+    <div id="body-wrap">
+      <header class="nav-down"  id="wrapper">
+    <div class="container-fluid">
+       <a class="navbar-brand" href="/"><img alt="Brand" src="/assets/images/normal/logo-dark-round.png"></a>
+       <span class="nav_trigger"><i class="fa fa-bars"></i></span>
+    </div>
+</header>
+
+      
+
+<!-- jumbotron for pages -->
+
+<!-- jumbotron for post page, with feature image -->
+  
+      <div class="jumbotron jumbotron-post" style="background-image: url('/assets/images/wp-content/uploads/2015/07/nap-1080x675.png')">
+         <div class="fullwidth-wrapper">
+    <div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12 ">
+      <div class="main-wrap">
+           <h2 class="post-title">A Design Pattern Story in Swift – Chapter 6: Command</h2>
+            <p class="post-date">03 Jul 2015</p>
+      </div>
+    </div>
+</div>
+        
+      </div>
+
+  <!-- jumbotron for post page, without feature image -->
+  
+
+
+
+
+
+
+      <main class="row">
+          <div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12 ">
+              <div class="main-wrap">
+                <div class="post card post-content">
+   <p>
+  <span>If you command wisely, you&#8217;ll be obeyed cheerfully.<span class="Apple-converted-space">  </span>&#8212; <em>Thomas Fuller</em></span>
+</p>
+
+<div class="page" title="Page 393">
+  <div class="layoutArea">
+    <div class="column">
+      <p>
+        The command pattern is used to encapsulate details of how to invoke a method on an object in a way that allows the method to be invoked at a different time or by a different component. (<em>Design Pattern in Swift)</em>
+      </p>
+      
+      
+<figure class="highlight"><pre><code class="language-swift" data-lang="swift"><span class="k">protocol</span> <span class="n">Command</span> <span class="p">{</span>
+    <span class="k">func</span> <span class="n">execute</span><span class="p">(</span><span class="nl">receiver</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1">//: A generic command can handle different kind of commands</span>
+<span class="k">class</span> <span class="n">GenericCommand</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">T</span><span class="o">&gt;:</span> <span class="n">Command</span> <span class="p">{</span>
+    <span class="n">private</span> <span class="k">var</span> <span class="nl">instruction</span><span class="p">:</span> <span class="n">T</span> <span class="o">-&gt;</span> <span class="n">Void</span>
+    <span class="k">init</span><span class="p">(</span><span class="nl">instruction</span><span class="p">:</span> <span class="n">T</span> <span class="o">-&gt;</span> <span class="n">Void</span><span class="p">){</span>
+        <span class="nb">self</span><span class="p">.</span><span class="n">instruction</span> <span class="o">=</span> <span class="n">instruction</span>
+    <span class="p">}</span>
+    <span class="k">func</span> <span class="n">execute</span><span class="p">(</span><span class="nl">receiver</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">guard</span> <span class="k">let</span> <span class="n">safeReceiver</span> <span class="o">=</span> <span class="n">receiver</span> <span class="kt">as</span><span class="o">?</span> <span class="n">T</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="n">fatalError</span><span class="p">(</span><span class="s">&quot;Receiver is not an expected type&quot;</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="n">instruction</span><span class="p">(</span><span class="n">safeReceiver</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="k">class</span> <span class="k">func</span> <span class="n">createCommand</span><span class="p">(</span><span class="nl">instruction</span><span class="p">:</span> <span class="n">T</span> <span class="o">-&gt;</span> <span class="n">Void</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Command</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">GenericCommand</span><span class="p">(</span><span class="nl">instruction</span><span class="p">:</span> <span class="n">instruction</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">protocol</span> <span class="n">LatestCommand</span> <span class="p">{</span>
+    <span class="k">func</span> <span class="n">executeLatestCommand</span><span class="p">(</span><span class="nl">receiver</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1">//: A commandWrapper manages the execution of multiple commands or the lastest command</span>
+<span class="k">class</span> <span class="nl">CommandWrapper</span><span class="p">:</span> <span class="n">Command</span><span class="p">,</span> <span class="n">LatestCommand</span> <span class="p">{</span>
+    <span class="n">private</span> <span class="k">let</span> <span class="nl">commands</span><span class="p">:</span> <span class="p">[</span><span class="n">Command</span><span class="p">]</span>
+    <span class="n">private</span> <span class="k">var</span> <span class="nl">remainingCommands</span><span class="p">:[</span><span class="n">Command</span><span class="p">]</span>
+    <span class="k">init</span><span class="p">(</span><span class="nl">commands</span><span class="p">:</span> <span class="p">[</span><span class="n">Command</span><span class="p">]){</span>
+        <span class="nb">self</span><span class="p">.</span><span class="n">commands</span> <span class="o">=</span> <span class="n">commands</span>
+        <span class="nb">self</span><span class="p">.</span><span class="n">remainingCommands</span> <span class="o">=</span> <span class="n">commands</span>
+    <span class="p">}</span>
+    <span class="k">func</span> <span class="n">execute</span><span class="p">(</span><span class="nl">receiver</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">print</span><span class="p">(</span><span class="s">&quot;will excute all commands for \(receiver)&quot;</span><span class="p">)</span>
+        <span class="n">commands</span><span class="p">.</span><span class="n">map</span><span class="p">{</span><span class="err">$</span><span class="mf">0.</span><span class="n">execute</span><span class="p">(</span><span class="n">receiver</span><span class="p">)}</span>
+        
+    <span class="p">}</span>
+    <span class="k">func</span> <span class="n">executeLatestCommand</span><span class="p">(</span><span class="nl">receiver</span><span class="p">:</span> <span class="n">Any</span><span class="p">){</span>
+        <span class="n">print</span><span class="p">(</span><span class="s">&quot;will execute the lastest command for \(receiver)&quot;</span><span class="p">)</span>
+        <span class="n">remainingCommands</span><span class="p">.</span><span class="n">removeLast</span><span class="p">().</span><span class="n">execute</span><span class="p">(</span><span class="n">receiver</span><span class="p">)</span>
+        <span class="n">print</span><span class="p">(</span><span class="s">&quot;\(remainingCommands.count) commands left.&quot;</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nl">PeopleStandByCommand</span><span class="p">:</span> <span class="n">Command</span> <span class="p">{</span>
+    <span class="k">func</span> <span class="n">execute</span><span class="p">(</span><span class="nl">receiver</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">print</span><span class="p">(</span><span class="s">&quot;All people standby&quot;</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="k">class</span> <span class="nl">PrepareWeaponCommand</span><span class="p">:</span> <span class="n">Command</span> <span class="p">{</span>
+    <span class="k">func</span> <span class="n">execute</span><span class="p">(</span><span class="nl">receiver</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">print</span><span class="p">(</span><span class="s">&quot;Weapons are ready&quot;</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nl">PrepareResourcesCommand</span><span class="p">:</span> <span class="n">Command</span> <span class="p">{</span>
+    <span class="k">func</span> <span class="n">execute</span><span class="p">(</span><span class="nl">receiver</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">print</span><span class="p">(</span><span class="s">&quot;All resources are ready&quot;</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">//: An operation that has manages the preparation of the war. It creates multiple commands which will be executed at runtime</span>
+<span class="k">class</span> <span class="nl">PrepareForWarOperation</span><span class="p">:</span><span class="n">CustomStringConvertible</span> <span class="p">{</span>
+    <span class="n">private</span> <span class="k">var</span> <span class="nl">commands</span><span class="p">:[</span><span class="n">Command</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">private</span> <span class="k">var</span> <span class="n">queue</span> <span class="o">=</span> <span class="n">dispatch_queue_create</span><span class="p">(</span><span class="s">&quot;arrayQueue&quot;</span><span class="p">,</span> <span class="n">DISPATCH_QUEUE_SERIAL</span><span class="p">)</span>
+    <span class="k">var</span> <span class="nl">name</span><span class="p">:</span> <span class="n">String</span>
+    <span class="k">var</span> <span class="nl">description</span><span class="p">:</span> <span class="n">String</span> <span class="p">{</span> <span class="k">return</span> <span class="n">name</span> <span class="p">}</span>
+    <span class="k">init</span><span class="p">(</span><span class="nl">kindom</span><span class="p">:</span> <span class="n">String</span><span class="p">){</span>
+        <span class="n">print</span><span class="p">(</span><span class="s">&quot;PrepareForWar Operation for \(kindom) is created&quot;</span><span class="p">)</span>
+        <span class="nb">self</span><span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">kindom</span>
+        <span class="n">prepareEverything</span><span class="p">()</span>
+    <span class="p">}</span>
+    <span class="k">func</span> <span class="n">notifyPeople</span><span class="p">(</span><span class="nl">people</span><span class="p">:</span> <span class="n">String</span><span class="p">){</span>
+        <span class="n">print</span><span class="p">(</span><span class="s">&quot;Notified \(people) about the war&quot;</span><span class="p">)</span>
+    <span class="p">}</span>
     
-    <span class=k>func</span> <span class=n>prepareEverything</span><span class=p>(){</span>
-        <span class=n>addCommand</span><span class=p>(</span><span class=n>PrepareForWarOperation</span><span class=p>.</span><span class=n>notifyPeople</span><span class=p>,</span> <span class=nl>people</span><span class=p>:</span> <span class=s>&quot;people of \(name)&quot;</span><span class=p>)</span>
-        <span class=n>commands</span><span class=p>.</span><span class=n>append</span><span class=p>(</span><span class=n>PrepareResourcesCommand</span><span class=p>())</span>
-        <span class=n>commands</span><span class=p>.</span><span class=n>append</span><span class=p>(</span><span class=n>PrepareWeaponCommand</span><span class=p>())</span>
-        <span class=n>commands</span><span class=p>.</span><span class=n>append</span><span class=p>(</span><span class=n>PeopleStandByCommand</span><span class=p>())</span>
-    <span class=p>}</span>
+    <span class="k">func</span> <span class="n">prepareEverything</span><span class="p">(){</span>
+        <span class="n">addCommand</span><span class="p">(</span><span class="n">PrepareForWarOperation</span><span class="p">.</span><span class="n">notifyPeople</span><span class="p">,</span> <span class="nl">people</span><span class="p">:</span> <span class="s">&quot;people of \(name)&quot;</span><span class="p">)</span>
+        <span class="n">commands</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">PrepareResourcesCommand</span><span class="p">())</span>
+        <span class="n">commands</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">PrepareWeaponCommand</span><span class="p">())</span>
+        <span class="n">commands</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">PeopleStandByCommand</span><span class="p">())</span>
+    <span class="p">}</span>
 
-    <span class=n>private</span> <span class=k>func</span> <span class=n>addCommand</span><span class=p>(</span><span class=nl>action</span><span class=p>:</span> <span class=n>PrepareForWarOperation</span> <span class=o>-&gt;</span> <span class=n>String</span> <span class=o>-&gt;</span> <span class=n>Void</span><span class=p>,</span> <span class=nl>people</span><span class=p>:</span> <span class=n>String</span><span class=p>){</span>
-        <span class=n>dispatch_sync</span><span class=p>(</span><span class=n>queue</span><span class=p>)</span> <span class=p>{</span> <span class=p>()</span> <span class=o>-&gt;</span> <span class=n>Void</span> <span class=k>in</span>
-            <span class=nb>self</span><span class=p>.</span><span class=n>commands</span><span class=p>.</span><span class=n>append</span><span class=p>(</span><span class=n>GenericCommand</span><span class=p>.</span><span class=n>createCommand</span><span class=p>({</span> <span class=n>prep</span>  <span class=k>in</span>
-                <span class=n>action</span><span class=p>(</span><span class=n>prep</span><span class=p>)(</span><span class=n>people</span><span class=p>)</span>
-            <span class=p>}))</span>
-        <span class=p>}</span>
-    <span class=p>}</span>
-    <span class=k>func</span> <span class=n>getACommandWrap</span><span class=p>()</span> <span class=o>-&gt;</span> <span class=k>protocol</span> <span class=o>&amp;</span><span class=n>lt</span><span class=p>;</span><span class=n>Command</span><span class=p>,</span><span class=n>LatestCommand</span><span class=o>&gt;?</span> <span class=p>{</span>
-            <span class=k>var</span> <span class=nl>command</span><span class=p>:</span> <span class=k>protocol</span> <span class=o>&amp;</span><span class=n>lt</span><span class=p>;</span><span class=n>Command</span><span class=p>,</span><span class=n>LatestCommand</span><span class=o>&gt;?</span>
-            <span class=n>dispatch_sync</span><span class=p>(</span><span class=n>queue</span><span class=p>)</span> <span class=p>{</span> <span class=p>()</span> <span class=o>-&gt;</span> <span class=n>Void</span> <span class=k>in</span>
-                <span class=n>command</span> <span class=o>=</span> <span class=n>CommandWrapper</span><span class=p>(</span><span class=nl>commands</span><span class=p>:</span> <span class=nb>self</span><span class=p>.</span><span class=n>commands</span><span class=p>)</span>
-            <span class=p>}</span>
-            <span class=k>return</span> <span class=n>command</span>
-    <span class=p>}</span>
-<span class=p>}</span>
-<span class=c1>//: Testing</span>
-<span class=k>let</span> <span class=n>p1</span> <span class=o>=</span> <span class=n>PrepareForWarOperation</span><span class=p>(</span><span class=nl>kindom</span><span class=p>:</span> <span class=s>&quot;Daria&quot;</span><span class=p>)</span>
-<span class=k>let</span> <span class=n>commands</span> <span class=o>=</span> <span class=n>p1</span><span class=p>.</span><span class=n>getACommandWrap</span><span class=p>()</span>
-<span class=n>commands</span><span class=o>?</span><span class=p>.</span><span class=n>executeLatestCommand</span><span class=p>(</span><span class=n>p1</span><span class=p>)</span>
-<span class=n>commands</span><span class=o>?</span><span class=p>.</span><span class=n>execute</span><span class=p>(</span><span class=n>p1</span><span class=p>)</span>
-<span class=n>print</span><span class=p>(</span><span class=s>&quot;</span><span class=se>\n</span><span class=s>&quot;</span><span class=p>)</span>
+    <span class="n">private</span> <span class="k">func</span> <span class="n">addCommand</span><span class="p">(</span><span class="nl">action</span><span class="p">:</span> <span class="n">PrepareForWarOperation</span> <span class="o">-&gt;</span> <span class="n">String</span> <span class="o">-&gt;</span> <span class="n">Void</span><span class="p">,</span> <span class="nl">people</span><span class="p">:</span> <span class="n">String</span><span class="p">){</span>
+        <span class="n">dispatch_sync</span><span class="p">(</span><span class="n">queue</span><span class="p">)</span> <span class="p">{</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Void</span> <span class="k">in</span>
+            <span class="nb">self</span><span class="p">.</span><span class="n">commands</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">GenericCommand</span><span class="p">.</span><span class="n">createCommand</span><span class="p">({</span> <span class="n">prep</span>  <span class="k">in</span>
+                <span class="n">action</span><span class="p">(</span><span class="n">prep</span><span class="p">)(</span><span class="n">people</span><span class="p">)</span>
+            <span class="p">}))</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">func</span> <span class="n">getACommandWrap</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="k">protocol</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">Command</span><span class="p">,</span><span class="n">LatestCommand</span><span class="o">&gt;?</span> <span class="p">{</span>
+            <span class="k">var</span> <span class="nl">command</span><span class="p">:</span> <span class="k">protocol</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">Command</span><span class="p">,</span><span class="n">LatestCommand</span><span class="o">&gt;?</span>
+            <span class="n">dispatch_sync</span><span class="p">(</span><span class="n">queue</span><span class="p">)</span> <span class="p">{</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Void</span> <span class="k">in</span>
+                <span class="n">command</span> <span class="o">=</span> <span class="n">CommandWrapper</span><span class="p">(</span><span class="nl">commands</span><span class="p">:</span> <span class="nb">self</span><span class="p">.</span><span class="n">commands</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="k">return</span> <span class="n">command</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="c1">//: Testing</span>
+<span class="k">let</span> <span class="n">p1</span> <span class="o">=</span> <span class="n">PrepareForWarOperation</span><span class="p">(</span><span class="nl">kindom</span><span class="p">:</span> <span class="s">&quot;Daria&quot;</span><span class="p">)</span>
+<span class="k">let</span> <span class="n">commands</span> <span class="o">=</span> <span class="n">p1</span><span class="p">.</span><span class="n">getACommandWrap</span><span class="p">()</span>
+<span class="n">commands</span><span class="o">?</span><span class="p">.</span><span class="n">executeLatestCommand</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span>
+<span class="n">commands</span><span class="o">?</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span>
+<span class="n">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
 
-<span class=k>let</span> <span class=n>p2</span> <span class=o>=</span> <span class=n>PrepareForWarOperation</span><span class=p>(</span><span class=nl>kindom</span><span class=p>:</span> <span class=s>&quot;Secila&quot;</span><span class=p>)</span>
-<span class=n>print</span><span class=p>(</span><span class=s>&quot;Use the same operation commands for another kindom called Secila&quot;</span><span class=p>)</span>
-<span class=n>commands</span><span class=o>?</span><span class=p>.</span><span class=n>execute</span><span class=p>(</span><span class=n>p2</span><span class=p>)</span></code></pre></figure><p>&nbsp;</p><p><a href=/assets/images/wp-content/uploads/2015/07/com.png><img class="aligncenter size-full wp-image-998" src=/assets/images/wp-content/uploads/2015/07/com.png alt=com width=459 height=245></a></p></div></div></div></div><div class=card><div class=page-nav><div><a class=prev href=/2015/07/01/a-design-pattern-story-in-swift-chapter-5-singleton/ ><i class="fa fa-angle-left"></i></a> <a class=prev href=/2015/07/01/a-design-pattern-story-in-swift-chapter-5-singleton/ >A Design Pattern Story in Swift – Chapter 5: Singleton</a></div><div><a class=next href=/2015/07/04/a-design-pattern-story-in-swift-chapter-7-adaptor-facade/ >A Design Pattern Story in Swift – Chapter 7: Adaptor &#038; Facade </a><a class=prev href=/2015/07/04/a-design-pattern-story-in-swift-chapter-7-adaptor-facade/ ><i class="fa fa-angle-right"></i></a></div></div></div><div class="related card"><h2>Related Posts</h2><ul class=related-posts><li><h4><a href=/general/2015/11/11/singles-day/ >Singles Day <small>11 Nov 2015</small></a></h4></li><li><h4><a href=/jekyll/2015/09/27/relocating-my-blog-from-wordpress-to-Jekyll/ >Relocating My Blog from Wordpress to Jekyll <small>27 Sep 2015</small></a></h4></li><li><h4><a href=/2015/07/18/a-design-pattern-story-in-swift-chapter-21-interpretor/ >A Design Pattern Story in Swift – Chapter 21: Interpretor <small>18 Jul 2015</small></a></h4></li></ul></div><div class=card><div id=disqus_thread></div><script type=text/javascript>var disqus_shortname = 'audreyli';
+<span class="k">let</span> <span class="n">p2</span> <span class="o">=</span> <span class="n">PrepareForWarOperation</span><span class="p">(</span><span class="nl">kindom</span><span class="p">:</span> <span class="s">&quot;Secila&quot;</span><span class="p">)</span>
+<span class="n">print</span><span class="p">(</span><span class="s">&quot;Use the same operation commands for another kindom called Secila&quot;</span><span class="p">)</span>
+<span class="n">commands</span><span class="o">?</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="n">p2</span><span class="p">)</span></code></pre></figure>
+
+      
+      <p>
+        &nbsp;
+      </p>
+      
+      <p>
+        <a href="/assets/images/wp-content/uploads/2015/07/com.png"><img class="aligncenter size-full wp-image-998" src="/assets/images/wp-content/uploads/2015/07/com.png" alt="com" width="459" height="245" /></a>
+      </p>
+    </div>
+  </div>
+</div>
+
+ </div>
+ <div class="card">
+   <div class="page-nav">
+    <div>
+        
+         <a class="prev" href="/2015/07/01/a-design-pattern-story-in-swift-chapter-5-singleton/"> <i class="fa fa-angle-left"></i></a> 
+          <a class="prev" href="/2015/07/01/a-design-pattern-story-in-swift-chapter-5-singleton/"> A Design Pattern Story in Swift – Chapter 5: Singleton</a>
+        
+    </div>
+    <div>
+        
+          <a class="next" href="/2015/07/04/a-design-pattern-story-in-swift-chapter-7-adaptor-facade/">A Design Pattern Story in Swift – Chapter 7: Adaptor &#038; Facade </a>
+         <a class="prev" href="/2015/07/04/a-design-pattern-story-in-swift-chapter-7-adaptor-facade/"> <i class="fa fa-angle-right"></i></a> 
+        
+    </div>
+</div>
+
+
+
+ </div>
+ <div class="related card">
+   <h2>Related Posts</h2>
+   <ul class="related-posts">
+     
+       <li>
+         <h4>
+           <a href="/general/2015/11/11/singles-day/">
+             Singles Day
+             <small>11 Nov 2015</small>
+           </a>
+         </h4>
+       </li>
+     
+       <li>
+         <h4>
+           <a href="/jekyll/2015/09/27/relocating-my-blog-from-wordpress-to-Jekyll/">
+             Relocating My Blog from Wordpress to Jekyll
+             <small>27 Sep 2015</small>
+           </a>
+         </h4>
+       </li>
+     
+       <li>
+         <h4>
+           <a href="/2015/07/18/a-design-pattern-story-in-swift-chapter-21-interpretor/">
+             A Design Pattern Story in Swift – Chapter 21: Interpretor
+             <small>18 Jul 2015</small>
+           </a>
+         </h4>
+       </li>
+     
+   </ul>
+ </div>
+ <div class="card">
+ <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'audreyli';
     
     (function() {
         var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
         dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
         (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-    })();</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript rel=nofollow>comments powered by Disqus.</a></noscript></div></div></div></main><footer class=row><div class="col-md-8 col-md-offset-2 text-center"><a href=http://audreyli.me>&copy; Copyright 2015 &nbsp; &nbsp; AudreyLi.me &nbsp; &nbsp;</a> <a href=/archives>Archives &nbsp; &nbsp; </a><a href=https://github.com/vidaaudrey title="Audrey's Github"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-github fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.linkedin.com/in/audreyauli title="Audrey's Google Plus"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i> </span></a><a href=/feed.xml title="RSS Feed"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-rss fa-stack-1x fa-inverse"></i></span></a></div></footer><script src=https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js></script><script src=https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/js/bootstrap.js></script><script src=/assets/javascript/index.js></script></div><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+ </div>
+ 
+
+      
+    
+
+
+
+
+              </div>
+          </div>
+          
+      </main>
+      <footer class="row">
+    <div class="col-md-8 col-md-offset-2 text-center">
+        <a href="http://audreyli.me">  &copy; Copyright 2015 &nbsp; &nbsp; AudreyLi.me &nbsp; &nbsp;</a> 
+       
+        <a href="/archives">Archives &nbsp; &nbsp; </a>
+        <a href="https://github.com/vidaaudrey" title="Audrey's Github">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+    
+        <a href="https://www.linkedin.com/in/audreyauli" title="Audrey's Google Plus">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+        
+        <a href="/feed.xml" title="RSS Feed">
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-circle fa-stack-2x"></i>
+              <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+            </span>
+        </a>
+    </div>
+    
+</footer>
+
+      
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js"></script>
+<script src="https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/js/bootstrap.js"></script>
+
+<!-- inject:js -->
+<script src="/assets/javascript/index.js"></script>
+<!-- endinject -->
+
+  </div>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
     })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
     ga('create', 'UA-68084914-1', 'auto');
-    ga('send', 'pageview');</script></body></html>
+    ga('send', 'pageview');
+
+  </script>
+  </body>
+</html>
