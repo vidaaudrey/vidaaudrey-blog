@@ -94,7 +94,7 @@ body {
     padding-top: $header-height;
     font-family: "RobotoDraft","Roboto",sans-serif; 
     color: #666;
-    font-size: 1.1rem;
+    font-size: 1.3rem;
     background: #fff url('/assets/images/furley_bg.png') 0 0 repeat;
 }
 a {
@@ -334,7 +334,13 @@ ul{
    
      .container{
         width: 100%;
-        float: left;
+        padding-top: 100px;
+        h1{
+            font-size: 6rem;
+        }
+        p{
+            font-size:1.5rem;
+        }
      }
     .fullwidth-wrapper{
         width: 91%;
@@ -573,6 +579,7 @@ span.post-date {
 footer { 
     padding: 20px;
     text-align: center;
+
     a{
         color: $gray-7;
     }
@@ -639,7 +646,12 @@ footer {
     display: none !important;
 }
 
-
+.about{
+    img{
+        width: 33%;
+        margin: 8px;
+    }
+}
 /* Related posts */
 .related {
     .related-posts {

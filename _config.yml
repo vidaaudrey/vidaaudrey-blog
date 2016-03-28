@@ -30,7 +30,7 @@ limit_posts: 100
 
 # Permalink structure and pagination options
 permalink: pretty
-paginate: 10
+paginate: 12
 paginate_path: 'page:num'
 excerpt_separator: '<!--more-->'
 
