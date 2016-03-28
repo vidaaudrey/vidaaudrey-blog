@@ -1,147 +1,153 @@
-<!DOCTYPE html><html xmlns=http://www.w3.org/1999/xhtml xml:lang=en lang=en-us><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><title>A Design Pattern Story in Swift – Chapter 21: Interpretor</title><meta name=description content="An interpreter translate our plain language expression into information and find out what we need. Here we have a  Unit Interpretor (Conversion Context) who ..."><link rel=canonical href=http://audreyli.me/2015/07/18/a-design-pattern-story-in-swift-chapter-21-interpretor/ ><link rel=stylesheet href=/assets/stylesheets/style-90cc5d106a.min.css><link rel="shortcut icon" href=/assets/favicon.ico><link rel=apple-touch-icon sizes=57x57 href=/assets/images/favicons/apple-touch-icon-57x57.png><link rel=apple-touch-icon sizes=60x60 href=/assets/images/favicons/apple-touch-icon-60x60.png><link rel=apple-touch-icon sizes=72x72 href=/assets/images/favicons/apple-touch-icon-72x72.png><link rel=apple-touch-icon sizes=76x76 href=/assets/images/favicons/apple-touch-icon-76x76.png><link rel=apple-touch-icon sizes=114x114 href=/assets/images/favicons/apple-touch-icon-114x114.png><link rel=apple-touch-icon sizes=120x120 href=/assets/images/favicons/apple-touch-icon-120x120.png><link rel=apple-touch-icon sizes=144x144 href=/assets/images/favicons/apple-touch-icon-144x144.png><link rel=apple-touch-icon sizes=152x152 href=/assets/images/favicons/apple-touch-icon-152x152.png><link rel=apple-touch-icon sizes=180x180 href=/assets/images/favicons/apple-touch-icon-180x180.png><link rel=icon type=image/png href=/assets/images/favicons/favicon-32x32.png sizes=32x32><link rel=stylesheet href=https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/css/bootstrap.css><link rel=stylesheet href=https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css><link type=application/atom+xml rel=alternate href=http://audreyli.me/feed.xml title=vidaaudrey-blog></head><body><header class=site-header><div class=wrapper><a class=site-title href=/ >vidaaudrey-blog</a><nav class=site-nav><a href=# class=menu-icon><svg viewBox="0 0 18 15"><path fill=#424242 d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/><path fill=#424242 d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/><path fill=#424242 d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/></svg></a><div class=trigger><a class=page-link href=/about/ >About</a> <a class=page-link href=/ >Home</a></div></nav></div></header><div class=page-content><div class=wrapper><article class=post itemscope itemtype=http://schema.org/BlogPosting><header class=post-header><h1 class=post-title itemprop="name headline">A Design Pattern Story in Swift – Chapter 21: Interpretor</h1><p class=post-meta><time datetime=2015-07-18T00:00:00-07:00 itemprop=datePublished>Jul 18, 2015</time> • <span itemprop=author itemscope itemtype=http://schema.org/Person><span itemprop=name>Audrey</span></span></p></header><div class=post-content itemprop=articleBody><p>An interpreter translate our plain language expression into information and find out what we need. Here we have a Unit Interpretor (Conversion Context) who does very diverse interpretation jobs. &lt;!&ndash;more&ndash;&gt;</p><figure class=highlight><pre><code class=language-swift data-lang=swift>enum UnitType: String {
-    case Gallon = &quot;Gallon&quot;
-    case Pint = &quot;Pint&quot;
-    case Cup = &quot;Cup&quot;
-    case USD = &quot;USD&quot;
-    case RMB = &quot;RMB&quot;
-    case EURO = &quot;EURO&quot;
-    case Meter = &quot;Meter&quot;
-    case Unkonwn = &quot;Unknown&quot;
-    init(str: String) {
-        switch str {
-            case &quot;Gallon&quot;, &quot;Gallons&quot;, &quot;gallons&quot;: self = .Gallon
-            case &quot;Pint&quot;, &quot;Pints&quot;, &quot;pints&quot;: self = .Pint
-            case &quot;Cup&quot;, &quot;Cups&quot;, &quot;cups&quot;: self = .Cup
-            case &quot;USD&quot;, &quot;usd&quot;, &quot;Usd&quot;: self = .USD
-            case &quot;EURO&quot;, &quot;euro&quot;, &quot;Euro&quot;: self = .EURO
-            case &quot;RMB&quot;, &quot;rmb&quot;, &quot;Rmb&quot;: self = .RMB
-        default: self = .Unkonwn
-        }
-    }
-}
+<!DOCTYPE html><html xmlns=http://www.w3.org/1999/xhtml xml:lang=en lang=en-us><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><title>A Design Pattern Story in Swift – Chapter 21: Interpretor</title><meta name=description content="An interpreter translate our plain language expression into information and find out what we need. Here we have a  Unit Interpretor (Conversion Context) who ..."><link rel=canonical href=http://audreyli.me/2015/07/18/a-design-pattern-story-in-swift-chapter-21-interpretor/ ><link rel=stylesheet href="http://fonts.googleapis.com/css?family=RobotoDraft:100,300,400|Roboto:300,300italic,400"><link rel=stylesheet href=https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/css/bootstrap.css><link rel=stylesheet href=https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css><link rel=stylesheet href=/assets/stylesheets/style-b5460305d5.min.css><link rel="shortcut icon" href=/assets/favicon.ico><link rel=apple-touch-icon sizes=57x57 href=/assets/images/favicons/apple-touch-icon-57x57.png><link rel=apple-touch-icon sizes=60x60 href=/assets/images/favicons/apple-touch-icon-60x60.png><link rel=apple-touch-icon sizes=72x72 href=/assets/images/favicons/apple-touch-icon-72x72.png><link rel=apple-touch-icon sizes=76x76 href=/assets/images/favicons/apple-touch-icon-76x76.png><link rel=apple-touch-icon sizes=114x114 href=/assets/images/favicons/apple-touch-icon-114x114.png><link rel=apple-touch-icon sizes=120x120 href=/assets/images/favicons/apple-touch-icon-120x120.png><link rel=apple-touch-icon sizes=144x144 href=/assets/images/favicons/apple-touch-icon-144x144.png><link rel=apple-touch-icon sizes=152x152 href=/assets/images/favicons/apple-touch-icon-152x152.png><link rel=apple-touch-icon sizes=180x180 href=/assets/images/favicons/apple-touch-icon-180x180.png><link rel=icon type=image/png href=/assets/images/favicons/favicon-32x32.png sizes=32x32><link type=application/atom+xml rel=alternate href=http://audreyli.me/feed.xml title=vidaaudrey-blog></head><body><nav id=push_sidebar><div class=social-icons><img src=/assets/images/audrey-li.jpg alt="Audrey's Photo" class=img-circle> <a href=https://github.com/vidaaudrey title="Audrey's Github"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-github fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.facebook.com/audreyauli title="Audrey's Facebook"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-facebook fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.linkedin.com/in/audreyauli title="Audrey's Google Plus"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i> </span></a><a href=/assets/images/wechat.jpg title="Audrey's Wechat"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-weixin fa-stack-1x fa-inverse"></i></span></a></div><ul><li><a href=/ >Home</a></li><li><a href=/portfolio>Portfolio</a></li><li><a href=/archives>Archives</a></li><li><a href=/atom.xml>Feed</a></li><li class=rss-subscribe>subscribe <a href=feed.xml>via RSS</a></li><li><a href=/about>About</a></li></ul></nav><div id=body-wrap><header class=nav-down id=wrapper><div class=container-fluid><a class=navbar-brand href=/ ><img alt=Brand src=/assets/images/normal/logo-dark-round.png></a><span class=nav_trigger><i class="fa fa-bars"></i></span></div></header><div class="jumbotron jumbotron-post" style="background-image: url('/assets/images/wp-content/uploads/2015/07/co-1080x675.jpg')"><div class=fullwidth-wrapper><div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12"><div class=main-wrap><h2 class=post-title>A Design Pattern Story in Swift – Chapter 21: Interpretor</h2><p class=post-date>18 Jul 2015</p></div></div></div></div><main class=row><div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12"><div class=main-wrap><div class="post card post-content"><p>An interpreter translate our plain language expression into information and find out what we need. Here we have a Unit Interpretor (Conversion Context) who does very diverse interpretation jobs. &lt;!&ndash;more&ndash;&gt;</p><figure class=highlight><pre><code class=language-swift data-lang=swift><span class=k>enum</span> <span class=nl>UnitType</span><span class=p>:</span> <span class=n>String</span> <span class=p>{</span>
+    <span class=k>case</span> <span class=n>Gallon</span> <span class=o>=</span> <span class=s>&quot;Gallon&quot;</span>
+    <span class=k>case</span> <span class=n>Pint</span> <span class=o>=</span> <span class=s>&quot;Pint&quot;</span>
+    <span class=k>case</span> <span class=n>Cup</span> <span class=o>=</span> <span class=s>&quot;Cup&quot;</span>
+    <span class=k>case</span> <span class=n>USD</span> <span class=o>=</span> <span class=s>&quot;USD&quot;</span>
+    <span class=k>case</span> <span class=n>RMB</span> <span class=o>=</span> <span class=s>&quot;RMB&quot;</span>
+    <span class=k>case</span> <span class=n>EURO</span> <span class=o>=</span> <span class=s>&quot;EURO&quot;</span>
+    <span class=k>case</span> <span class=n>Meter</span> <span class=o>=</span> <span class=s>&quot;Meter&quot;</span>
+    <span class=k>case</span> <span class=n>Unkonwn</span> <span class=o>=</span> <span class=s>&quot;Unknown&quot;</span>
+    <span class=k>init</span><span class=p>(</span><span class=nl>str</span><span class=p>:</span> <span class=n>String</span><span class=p>)</span> <span class=p>{</span>
+        <span class=k>switch</span> <span class=n>str</span> <span class=p>{</span>
+            <span class=k>case</span> <span class=s>&quot;Gallon&quot;</span><span class=p>,</span> <span class=s>&quot;Gallons&quot;</span><span class=p>,</span> <span class=s>&quot;gallons&quot;</span><span class=o>:</span> <span class=nb>self</span> <span class=o>=</span> <span class=p>.</span><span class=n>Gallon</span>
+            <span class=k>case</span> <span class=s>&quot;Pint&quot;</span><span class=p>,</span> <span class=s>&quot;Pints&quot;</span><span class=p>,</span> <span class=s>&quot;pints&quot;</span><span class=o>:</span> <span class=nb>self</span> <span class=o>=</span> <span class=p>.</span><span class=n>Pint</span>
+            <span class=k>case</span> <span class=s>&quot;Cup&quot;</span><span class=p>,</span> <span class=s>&quot;Cups&quot;</span><span class=p>,</span> <span class=s>&quot;cups&quot;</span><span class=o>:</span> <span class=nb>self</span> <span class=o>=</span> <span class=p>.</span><span class=n>Cup</span>
+            <span class=k>case</span> <span class=s>&quot;USD&quot;</span><span class=p>,</span> <span class=s>&quot;usd&quot;</span><span class=p>,</span> <span class=s>&quot;Usd&quot;</span><span class=o>:</span> <span class=nb>self</span> <span class=o>=</span> <span class=p>.</span><span class=n>USD</span>
+            <span class=k>case</span> <span class=s>&quot;EURO&quot;</span><span class=p>,</span> <span class=s>&quot;euro&quot;</span><span class=p>,</span> <span class=s>&quot;Euro&quot;</span><span class=o>:</span> <span class=nb>self</span> <span class=o>=</span> <span class=p>.</span><span class=n>EURO</span>
+            <span class=k>case</span> <span class=s>&quot;RMB&quot;</span><span class=p>,</span> <span class=s>&quot;rmb&quot;</span><span class=p>,</span> <span class=s>&quot;Rmb&quot;</span><span class=o>:</span> <span class=nb>self</span> <span class=o>=</span> <span class=p>.</span><span class=n>RMB</span>
+        <span class=k>default</span><span class=o>:</span> <span class=nb>self</span> <span class=o>=</span> <span class=p>.</span><span class=n>Unkonwn</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+<span class=p>}</span>
 
-protocol Expression {
-    func getUnit(quantity: Double, targetUnit: String) -&gt; Double
-}
-class Gallon: NSObject, Expression {
-    func getUnit(quantity: Double, targetUnit: String) -&gt; Double {
-        let targetUnitType = UnitType(str: targetUnit)
-        switch targetUnitType {
-        case .Gallon: return quantity
-        case .Pint: return quantity * 8
-        case .Cup: return quantity * 16
-        default:
-            print(&quot;conversion not supported&quot;)
-            return -1 // just saying it&#39;s a wrong number
-        }
-    }
-}
-class Pint: NSObject, Expression {
-    func getUnit(quantity: Double, targetUnit: String) -&gt; Double {
-        let targetUnitType = UnitType(str: targetUnit)
-        switch targetUnitType {
-        case .Gallon: return quantity * 0.125
-        case .Pint: return quantity
-        case .Cup: return quantity * 2
-        default:
-            print(&quot;conversion not supported&quot;)
-            return -1
-        }
+<span class=k>protocol</span> <span class=n>Expression</span> <span class=p>{</span>
+    <span class=k>func</span> <span class=n>getUnit</span><span class=p>(</span><span class=nl>quantity</span><span class=p>:</span> <span class=n>Double</span><span class=p>,</span> <span class=nl>targetUnit</span><span class=p>:</span> <span class=n>String</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Double</span>
+<span class=p>}</span>
+<span class=k>class</span> <span class=nl>Gallon</span><span class=p>:</span> <span class=bp>NSObject</span><span class=p>,</span> <span class=n>Expression</span> <span class=p>{</span>
+    <span class=k>func</span> <span class=n>getUnit</span><span class=p>(</span><span class=nl>quantity</span><span class=p>:</span> <span class=n>Double</span><span class=p>,</span> <span class=nl>targetUnit</span><span class=p>:</span> <span class=n>String</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Double</span> <span class=p>{</span>
+        <span class=k>let</span> <span class=n>targetUnitType</span> <span class=o>=</span> <span class=n>UnitType</span><span class=p>(</span><span class=nl>str</span><span class=p>:</span> <span class=n>targetUnit</span><span class=p>)</span>
+        <span class=k>switch</span> <span class=n>targetUnitType</span> <span class=p>{</span>
+        <span class=k>case</span> <span class=p>.</span><span class=nl>Gallon</span><span class=p>:</span> <span class=k>return</span> <span class=n>quantity</span>
+        <span class=k>case</span> <span class=p>.</span><span class=nl>Pint</span><span class=p>:</span> <span class=k>return</span> <span class=n>quantity</span> <span class=o>*</span> <span class=mi>8</span>
+        <span class=k>case</span> <span class=p>.</span><span class=nl>Cup</span><span class=p>:</span> <span class=k>return</span> <span class=n>quantity</span> <span class=o>*</span> <span class=mi>16</span>
+        <span class=k>default</span><span class=o>:</span>
+            <span class=n>print</span><span class=p>(</span><span class=s>&quot;conversion not supported&quot;</span><span class=p>)</span>
+            <span class=k>return</span> <span class=o>-</span><span class=mi>1</span> <span class=c1>// just saying it&#39;s a wrong number</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+<span class=k>class</span> <span class=nl>Pint</span><span class=p>:</span> <span class=bp>NSObject</span><span class=p>,</span> <span class=n>Expression</span> <span class=p>{</span>
+    <span class=k>func</span> <span class=n>getUnit</span><span class=p>(</span><span class=nl>quantity</span><span class=p>:</span> <span class=n>Double</span><span class=p>,</span> <span class=nl>targetUnit</span><span class=p>:</span> <span class=n>String</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Double</span> <span class=p>{</span>
+        <span class=k>let</span> <span class=n>targetUnitType</span> <span class=o>=</span> <span class=n>UnitType</span><span class=p>(</span><span class=nl>str</span><span class=p>:</span> <span class=n>targetUnit</span><span class=p>)</span>
+        <span class=k>switch</span> <span class=n>targetUnitType</span> <span class=p>{</span>
+        <span class=k>case</span> <span class=p>.</span><span class=nl>Gallon</span><span class=p>:</span> <span class=k>return</span> <span class=n>quantity</span> <span class=o>*</span> <span class=mf>0.125</span>
+        <span class=k>case</span> <span class=p>.</span><span class=nl>Pint</span><span class=p>:</span> <span class=k>return</span> <span class=n>quantity</span>
+        <span class=k>case</span> <span class=p>.</span><span class=nl>Cup</span><span class=p>:</span> <span class=k>return</span> <span class=n>quantity</span> <span class=o>*</span> <span class=mi>2</span>
+        <span class=k>default</span><span class=o>:</span>
+            <span class=n>print</span><span class=p>(</span><span class=s>&quot;conversion not supported&quot;</span><span class=p>)</span>
+            <span class=k>return</span> <span class=o>-</span><span class=mi>1</span>
+        <span class=p>}</span>
         
-    }
-}
-class USD: NSObject, Expression {
-    func getUnit(quantity: Double, targetUnit: String) -&gt; Double {
-        let targetUnitType = UnitType(str: targetUnit)
-        switch targetUnitType {
-        case .USD: return quantity
-        case .EURO: return quantity * 0.92
-        case .RMB: return quantity * 6.21
-        default:
-            print(&quot;conversion not supported&quot;)
-            return -1
-        }
+    <span class=p>}</span>
+<span class=p>}</span>
+<span class=k>class</span> <span class=nl>USD</span><span class=p>:</span> <span class=bp>NSObject</span><span class=p>,</span> <span class=n>Expression</span> <span class=p>{</span>
+    <span class=k>func</span> <span class=n>getUnit</span><span class=p>(</span><span class=nl>quantity</span><span class=p>:</span> <span class=n>Double</span><span class=p>,</span> <span class=nl>targetUnit</span><span class=p>:</span> <span class=n>String</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Double</span> <span class=p>{</span>
+        <span class=k>let</span> <span class=n>targetUnitType</span> <span class=o>=</span> <span class=n>UnitType</span><span class=p>(</span><span class=nl>str</span><span class=p>:</span> <span class=n>targetUnit</span><span class=p>)</span>
+        <span class=k>switch</span> <span class=n>targetUnitType</span> <span class=p>{</span>
+        <span class=k>case</span> <span class=p>.</span><span class=nl>USD</span><span class=p>:</span> <span class=k>return</span> <span class=n>quantity</span>
+        <span class=k>case</span> <span class=p>.</span><span class=nl>EURO</span><span class=p>:</span> <span class=k>return</span> <span class=n>quantity</span> <span class=o>*</span> <span class=mf>0.92</span>
+        <span class=k>case</span> <span class=p>.</span><span class=nl>RMB</span><span class=p>:</span> <span class=k>return</span> <span class=n>quantity</span> <span class=o>*</span> <span class=mf>6.21</span>
+        <span class=k>default</span><span class=o>:</span>
+            <span class=n>print</span><span class=p>(</span><span class=s>&quot;conversion not supported&quot;</span><span class=p>)</span>
+            <span class=k>return</span> <span class=o>-</span><span class=mi>1</span>
+        <span class=p>}</span>
         
-    }
-}
+    <span class=p>}</span>
+<span class=p>}</span>
 
-class RMB: NSObject, Expression {
-    func getUnit(quantity: Double, targetUnit: String) -&gt; Double {
+<span class=k>class</span> <span class=nl>RMB</span><span class=p>:</span> <span class=bp>NSObject</span><span class=p>,</span> <span class=n>Expression</span> <span class=p>{</span>
+    <span class=k>func</span> <span class=n>getUnit</span><span class=p>(</span><span class=nl>quantity</span><span class=p>:</span> <span class=n>Double</span><span class=p>,</span> <span class=nl>targetUnit</span><span class=p>:</span> <span class=n>String</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Double</span> <span class=p>{</span>
 
-        let targetUnitType = UnitType(str: targetUnit)
-        switch targetUnitType {
-        case .USD: return quantity * 0.16
-        case .EURO: return quantity * 0.15
-        case .RMB: return quantity
-        default:
-            print(&quot;conversion not supported&quot;)
-            return -1
-        }
-    }
-}
+        <span class=k>let</span> <span class=n>targetUnitType</span> <span class=o>=</span> <span class=n>UnitType</span><span class=p>(</span><span class=nl>str</span><span class=p>:</span> <span class=n>targetUnit</span><span class=p>)</span>
+        <span class=k>switch</span> <span class=n>targetUnitType</span> <span class=p>{</span>
+        <span class=k>case</span> <span class=p>.</span><span class=nl>USD</span><span class=p>:</span> <span class=k>return</span> <span class=n>quantity</span> <span class=o>*</span> <span class=mf>0.16</span>
+        <span class=k>case</span> <span class=p>.</span><span class=nl>EURO</span><span class=p>:</span> <span class=k>return</span> <span class=n>quantity</span> <span class=o>*</span> <span class=mf>0.15</span>
+        <span class=k>case</span> <span class=p>.</span><span class=nl>RMB</span><span class=p>:</span> <span class=k>return</span> <span class=n>quantity</span>
+        <span class=k>default</span><span class=o>:</span>
+            <span class=n>print</span><span class=p>(</span><span class=s>&quot;conversion not supported&quot;</span><span class=p>)</span>
+            <span class=k>return</span> <span class=o>-</span><span class=mi>1</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+<span class=p>}</span>
 
-struct AppConfig {
-    static let AppName = &quot;interpretor&quot;
-}
-// The context to translate a sentence into related command and get the result.
-class ConversionContext {
-    static let sharedInstance = ConversionContext()
-    private func getTargetQuantity(fromConversion: String, toConversion: String, quantity: Double) -&gt; Double {
-        if fromConversion != &quot;&quot; {
-            let classStr = UnitType(str: fromConversion).rawValue
-            guard let anyObjecType : AnyObject.Type = NSClassFromString(&quot;\(AppConfig.AppName).\(classStr)&quot;)
-                else {
-                    if classStr == &quot;EURO&quot; || classStr == &quot;Cup&quot; {
-                        return -1
-                    } else {
-                        return -3
-                    }
-            }
-            let nsObjecType : NSObject.Type = anyObjecType as! NSObject.Type
+<span class=k>struct</span> <span class=n>AppConfig</span> <span class=p>{</span>
+    <span class=k>static</span> <span class=k>let</span> <span class=n>AppName</span> <span class=o>=</span> <span class=s>&quot;interpretor&quot;</span>
+<span class=p>}</span>
+<span class=c1>// The context to translate a sentence into related command and get the result.</span>
+<span class=k>class</span> <span class=n>ConversionContext</span> <span class=p>{</span>
+    <span class=k>static</span> <span class=k>let</span> <span class=n>sharedInstance</span> <span class=o>=</span> <span class=n>ConversionContext</span><span class=p>()</span>
+    <span class=n>private</span> <span class=k>func</span> <span class=n>getTargetQuantity</span><span class=p>(</span><span class=nl>fromConversion</span><span class=p>:</span> <span class=n>String</span><span class=p>,</span> <span class=nl>toConversion</span><span class=p>:</span> <span class=n>String</span><span class=p>,</span> <span class=nl>quantity</span><span class=p>:</span> <span class=n>Double</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Double</span> <span class=p>{</span>
+        <span class=k>if</span> <span class=n>fromConversion</span> <span class=o>!=</span> <span class=s>&quot;&quot;</span> <span class=p>{</span>
+            <span class=k>let</span> <span class=n>classStr</span> <span class=o>=</span> <span class=n>UnitType</span><span class=p>(</span><span class=nl>str</span><span class=p>:</span> <span class=n>fromConversion</span><span class=p>).</span><span class=n>rawValue</span>
+            <span class=n>guard</span> <span class=k>let</span> <span class=nl>anyObjecType</span> <span class=p>:</span> <span class=n>AnyObject</span><span class=p>.</span><span class=kt>Type</span> <span class=o>=</span> <span class=n>NSClassFromString</span><span class=p>(</span><span class=s>&quot;\(AppConfig.AppName).\(classStr)&quot;</span><span class=p>)</span>
+                <span class=k>else</span> <span class=p>{</span>
+                    <span class=k>if</span> <span class=n>classStr</span> <span class=o>==</span> <span class=s>&quot;EURO&quot;</span> <span class=o>||</span> <span class=n>classStr</span> <span class=o>==</span> <span class=s>&quot;Cup&quot;</span> <span class=p>{</span>
+                        <span class=k>return</span> <span class=o>-</span><span class=mi>1</span>
+                    <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+                        <span class=k>return</span> <span class=o>-</span><span class=mi>3</span>
+                    <span class=p>}</span>
+            <span class=p>}</span>
+            <span class=k>let</span> <span class=nl>nsObjecType</span> <span class=p>:</span> <span class=bp>NSObject</span><span class=p>.</span><span class=kt>Type</span> <span class=o>=</span> <span class=n>anyObjecType</span> <span class=kt>as</span><span class=o>!</span> <span class=bp>NSObject</span><span class=p>.</span><span class=kt>Type</span>
             
-            guard let object = nsObjecType() as? Expression else {return -4 }
-            return  object.getUnit(quantity, targetUnit: toConversion)
+            <span class=n>guard</span> <span class=k>let</span> <span class=n>object</span> <span class=o>=</span> <span class=n>nsObjecType</span><span class=p>()</span> <span class=kt>as</span><span class=o>?</span> <span class=n>Expression</span> <span class=k>else</span> <span class=p>{</span><span class=k>return</span> <span class=o>-</span><span class=mi>4</span> <span class=p>}</span>
+            <span class=k>return</span>  <span class=n>object</span><span class=p>.</span><span class=n>getUnit</span><span class=p>(</span><span class=n>quantity</span><span class=p>,</span> <span class=nl>targetUnit</span><span class=p>:</span> <span class=n>toConversion</span><span class=p>)</span>
         
-        }
-        return -2
-    }
-    func getConversionFromInput(input:String) -&gt; String {
-        let partsOfQues = input.componentsSeparatedByString(&quot; &quot;)
-        let fromConversion = partsOfQues[1]
-        let toConversion = partsOfQues[3]
-        let quantity = Double(partsOfQues[0])!
+        <span class=p>}</span>
+        <span class=k>return</span> <span class=o>-</span><span class=mi>2</span>
+    <span class=p>}</span>
+    <span class=k>func</span> <span class=n>getConversionFromInput</span><span class=p>(</span><span class=nl>input</span><span class=p>:</span><span class=n>String</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>String</span> <span class=p>{</span>
+        <span class=k>let</span> <span class=n>partsOfQues</span> <span class=o>=</span> <span class=n>input</span><span class=p>.</span><span class=n>componentsSeparatedByString</span><span class=p>(</span><span class=s>&quot; &quot;</span><span class=p>)</span>
+        <span class=k>let</span> <span class=n>fromConversion</span> <span class=o>=</span> <span class=n>partsOfQues</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span>
+        <span class=k>let</span> <span class=n>toConversion</span> <span class=o>=</span> <span class=n>partsOfQues</span><span class=p>[</span><span class=mi>3</span><span class=p>]</span>
+        <span class=k>let</span> <span class=n>quantity</span> <span class=o>=</span> <span class=n>Double</span><span class=p>(</span><span class=n>partsOfQues</span><span class=p>[</span><span class=mi>0</span><span class=p>])</span><span class=o>!</span>
         
-        let targetQuantity = getTargetQuantity(fromConversion, toConversion: toConversion, quantity: quantity)
-        switch targetQuantity {
-        case -1: return &quot;Currently we only support conversion from RMB, USD, Gallon and Pint. \(fromConversion) is not supported&quot;
-        case -3: return &quot;We can&#39;t recognize your input yet. Try something like RMB, rmb, Gallon, Gallons...&quot;
-        case -2: return &quot;Sorry, we couldn&#39;t identify the source conversion. Try something like [ 10 Gallons to Pints ]&quot;
-        case -4: return &quot;Couldn&#39;t convert. The object we created doesn&#39;t conform with Expression protocol&quot;
-        case let x where x &gt;= 0 :  return &quot;\(partsOfQues[0]) \(partsOfQues[1]) equals \(targetQuantity) \(partsOfQues[3])&quot;
-        default: return &quot;Some other unknow error happened &quot;
-        }
-    }
-}
+        <span class=k>let</span> <span class=n>targetQuantity</span> <span class=o>=</span> <span class=n>getTargetQuantity</span><span class=p>(</span><span class=n>fromConversion</span><span class=p>,</span> <span class=nl>toConversion</span><span class=p>:</span> <span class=n>toConversion</span><span class=p>,</span> <span class=nl>quantity</span><span class=p>:</span> <span class=n>quantity</span><span class=p>)</span>
+        <span class=k>switch</span> <span class=n>targetQuantity</span> <span class=p>{</span>
+        <span class=k>case</span> <span class=o>-</span><span class=mi>1</span><span class=o>:</span> <span class=k>return</span> <span class=s>&quot;Currently we only support conversion from RMB, USD, Gallon and Pint. \(fromConversion) is not supported&quot;</span>
+        <span class=k>case</span> <span class=o>-</span><span class=mi>3</span><span class=o>:</span> <span class=k>return</span> <span class=s>&quot;We can&#39;t recognize your input yet. Try something like RMB, rmb, Gallon, Gallons...&quot;</span>
+        <span class=k>case</span> <span class=o>-</span><span class=mi>2</span><span class=o>:</span> <span class=k>return</span> <span class=s>&quot;Sorry, we couldn&#39;t identify the source conversion. Try something like [ 10 Gallons to Pints ]&quot;</span>
+        <span class=k>case</span> <span class=o>-</span><span class=mi>4</span><span class=o>:</span> <span class=k>return</span> <span class=s>&quot;Couldn&#39;t convert. The object we created doesn&#39;t conform with Expression protocol&quot;</span>
+        <span class=k>case</span> <span class=k>let</span> <span class=n>x</span> <span class=k>where</span> <span class=n>x</span> <span class=o>&gt;=</span> <span class=mi>0</span> <span class=o>:</span>  <span class=k>return</span> <span class=s>&quot;\(partsOfQues[0]) \(partsOfQues[1]) equals \(targetQuantity) \(partsOfQues[3])&quot;</span>
+        <span class=k>default</span><span class=o>:</span> <span class=k>return</span> <span class=s>&quot;Some other unknow error happened &quot;</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+<span class=p>}</span>
 
-func getOutput(input: String) -&gt; String {
-    print(&quot;Getting user input:[ \(input) ]&quot;)
-    let context = ConversionContext.sharedInstance
-    return context.getConversionFromInput(input)
-}
+<span class=k>func</span> <span class=n>getOutput</span><span class=p>(</span><span class=nl>input</span><span class=p>:</span> <span class=n>String</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>String</span> <span class=p>{</span>
+    <span class=n>print</span><span class=p>(</span><span class=s>&quot;Getting user input:[ \(input) ]&quot;</span><span class=p>)</span>
+    <span class=k>let</span> <span class=n>context</span> <span class=o>=</span> <span class=n>ConversionContext</span><span class=p>.</span><span class=n>sharedInstance</span>
+    <span class=k>return</span> <span class=n>context</span><span class=p>.</span><span class=n>getConversionFromInput</span><span class=p>(</span><span class=n>input</span><span class=p>)</span>
+<span class=p>}</span>
 
-// Testing. User inputs a sentence and the conversionContext will translate it
-let userInput = [
-    &quot;10 Gallons is Pints&quot;,
-    &quot;231 Gallo is Pints&quot;,
-    &quot;32.11 Pints in Gallon&quot;,
-    &quot;2001.99 USD to RMB&quot;,
-    &quot;984.2323 rmb in EURO&quot;,
-    &quot;23 Euro in RMB&quot;
-]
-userInput.map{ print(&quot;Output: [ \(getOutput($0)) ] \n&quot;) }</code></pre></figure><p><a href=/assets/images/wp-content/uploads/2015/07/interpretor.png><img class="aligncenter size-full wp-image-1086" src=/assets/images/wp-content/uploads/2015/07/interpretor.png alt=interpretor width=693 height=290></a></p><p></p><p></p></div></article></div></div><footer class=site-footer><div class=wrapper><h2 class=footer-heading></h2><div class=footer-col-wrapper><div class="footer-col footer-col-1"><ul class=contact-list><li></li><li><a href=mailto:me@audreyli.me>me@audreyli.me</a></li></ul></div><div class="footer-col footer-col-2"><ul class=social-media-list><li><a href=https://twitter.com/vidaaudrey><span class="icon icon--twitter"><svg viewBox="0 0 16 16"><path fill=#828282 d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809
-                  c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27
-                  c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767
-                  c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206
-                  C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271
-                  c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469
-                  c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg> </span><span class=username>vidaaudrey</span></a></li></ul></div><div class="footer-col footer-col-3"><p class=text>Audrey Li's personal blog</p></div></div></div></footer><script src=https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js></script><script src=https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/js/bootstrap.js></script><script src=/assets/javascript/index-f8fab38504.min.js></script></body></html>
+<span class=c1>// Testing. User inputs a sentence and the conversionContext will translate it</span>
+<span class=k>let</span> <span class=n>userInput</span> <span class=o>=</span> <span class=p>[</span>
+    <span class=s>&quot;10 Gallons is Pints&quot;</span><span class=p>,</span>
+    <span class=s>&quot;231 Gallo is Pints&quot;</span><span class=p>,</span>
+    <span class=s>&quot;32.11 Pints in Gallon&quot;</span><span class=p>,</span>
+    <span class=s>&quot;2001.99 USD to RMB&quot;</span><span class=p>,</span>
+    <span class=s>&quot;984.2323 rmb in EURO&quot;</span><span class=p>,</span>
+    <span class=s>&quot;23 Euro in RMB&quot;</span>
+<span class=p>]</span>
+<span class=n>userInput</span><span class=p>.</span><span class=n>map</span><span class=p>{</span> <span class=n>print</span><span class=p>(</span><span class=s>&quot;Output: [ \(getOutput($0)) ] </span><span class=se>\n</span><span class=s>&quot;</span><span class=p>)</span> <span class=p>}</span></code></pre></figure><p><a href=/assets/images/wp-content/uploads/2015/07/interpretor.png><img class="aligncenter size-full wp-image-1086" src=/assets/images/wp-content/uploads/2015/07/interpretor.png alt=interpretor width=693 height=290></a></p><p></p><p></p></div><div class=card><div class=page-nav><div><a class=prev href=/2015/07/18/a-design-pattern-story-in-swift-chapter-20-mediator/ ><i class="fa fa-angle-left"></i></a> <a class=prev href=/2015/07/18/a-design-pattern-story-in-swift-chapter-20-mediator/ >A Design Pattern Story in Swift – Chapter 20: Mediator</a></div><div><a class=next href=/jekyll/2015/09/27/relocating-my-blog-from-wordpress-to-Jekyll/ >Relocating My Blog from Wordpress to Jekyll </a><a class=prev href=/jekyll/2015/09/27/relocating-my-blog-from-wordpress-to-Jekyll/ ><i class="fa fa-angle-right"></i></a></div></div></div><div class="related card"><h2>Related Posts</h2><ul class=related-posts><li><h4><a href=/general/2015/11/11/singles-day/ >Singles Day <small>11 Nov 2015</small></a></h4></li><li><h4><a href=/jekyll/2015/09/27/relocating-my-blog-from-wordpress-to-Jekyll/ >Relocating My Blog from Wordpress to Jekyll <small>27 Sep 2015</small></a></h4></li><li><h4><a href=/2015/07/18/a-design-pattern-story-in-swift-chapter-20-mediator/ >A Design Pattern Story in Swift – Chapter 20: Mediator <small>18 Jul 2015</small></a></h4></li></ul></div><div class=card><div id=disqus_thread></div><script type=text/javascript>var disqus_shortname = 'audreyli';
+    
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript rel=nofollow>comments powered by Disqus.</a></noscript></div></div></div></main><footer class=row><div class="col-md-8 col-md-offset-2 text-center"><a href=http://audreyli.me>&copy; Copyright 2015 &nbsp; &nbsp; AudreyLi.me &nbsp; &nbsp;</a> <a href=/archives>Archives &nbsp; &nbsp; </a><a href=https://github.com/vidaaudrey title="Audrey's Github"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-github fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.linkedin.com/in/audreyauli title="Audrey's Google Plus"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i> </span></a><a href=/feed.xml title="RSS Feed"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-rss fa-stack-1x fa-inverse"></i></span></a></div></footer><script src=https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js></script><script src=https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/js/bootstrap.js></script><script src=/assets/javascript/index.js></script></div><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-68084914-1', 'auto');
+    ga('send', 'pageview');</script></body></html>

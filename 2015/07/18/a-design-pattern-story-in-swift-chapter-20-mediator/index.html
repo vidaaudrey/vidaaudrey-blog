@@ -1,292 +1,298 @@
-<!DOCTYPE html><html xmlns=http://www.w3.org/1999/xhtml xml:lang=en lang=en-us><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><title>A Design Pattern Story in Swift – Chapter 20: Mediator</title><meta name=description content="Artists paint, musicians compose, different jobs for different pros.  It’s not easy for a person to find a pro directly to do a job without some sort of agen..."><link rel=canonical href=http://audreyli.me/2015/07/18/a-design-pattern-story-in-swift-chapter-20-mediator/ ><link rel=stylesheet href=/assets/stylesheets/style-90cc5d106a.min.css><link rel="shortcut icon" href=/assets/favicon.ico><link rel=apple-touch-icon sizes=57x57 href=/assets/images/favicons/apple-touch-icon-57x57.png><link rel=apple-touch-icon sizes=60x60 href=/assets/images/favicons/apple-touch-icon-60x60.png><link rel=apple-touch-icon sizes=72x72 href=/assets/images/favicons/apple-touch-icon-72x72.png><link rel=apple-touch-icon sizes=76x76 href=/assets/images/favicons/apple-touch-icon-76x76.png><link rel=apple-touch-icon sizes=114x114 href=/assets/images/favicons/apple-touch-icon-114x114.png><link rel=apple-touch-icon sizes=120x120 href=/assets/images/favicons/apple-touch-icon-120x120.png><link rel=apple-touch-icon sizes=144x144 href=/assets/images/favicons/apple-touch-icon-144x144.png><link rel=apple-touch-icon sizes=152x152 href=/assets/images/favicons/apple-touch-icon-152x152.png><link rel=apple-touch-icon sizes=180x180 href=/assets/images/favicons/apple-touch-icon-180x180.png><link rel=icon type=image/png href=/assets/images/favicons/favicon-32x32.png sizes=32x32><link rel=stylesheet href=https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/css/bootstrap.css><link rel=stylesheet href=https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css><link type=application/atom+xml rel=alternate href=http://audreyli.me/feed.xml title=vidaaudrey-blog></head><body><header class=site-header><div class=wrapper><a class=site-title href=/ >vidaaudrey-blog</a><nav class=site-nav><a href=# class=menu-icon><svg viewBox="0 0 18 15"><path fill=#424242 d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/><path fill=#424242 d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/><path fill=#424242 d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/></svg></a><div class=trigger><a class=page-link href=/about/ >About</a> <a class=page-link href=/ >Home</a></div></nav></div></header><div class=page-content><div class=wrapper><article class=post itemscope itemtype=http://schema.org/BlogPosting><header class=post-header><h1 class=post-title itemprop="name headline">A Design Pattern Story in Swift – Chapter 20: Mediator</h1><p class=post-meta><time datetime=2015-07-18T00:00:00-07:00 itemprop=datePublished>Jul 18, 2015</time> • <span itemprop=author itemscope itemtype=http://schema.org/Person><span itemprop=name>Audrey</span></span></p></header><div class=post-content itemprop=articleBody><div class=page title="Page 414"><div class=layoutArea><div class=column><p><span>Artists paint, musicians compose, different jobs for different pros.  It&#8217;s not easy for a person to find a pro directly to do a job without some sort of agent in the middle, and even harder for a pro to find a client among all the people.  A command mediator (aka. command dispatch center) takes all the burden away. It can process task according to the task requirement such as:</span></p><ul><li class=p1>Group task will be sent to all the pros who can do the jobs</li><li class=p1>Normal task will be sent to the appropriate pros and get their quotations</li><li class=p1>Once the user has chosen the pro based on the quotations, the mediator will send the task to the chosen pro</li><li class=p1>Upon getting the work back from the pro, the mediator will send the work to the customer for confirmation</li></ul><p>The mediator pattern simplifies peer-to-peer communication between objects by introducing a mediator object that acts as a communications broker between the objects. Instead of having to keep track of and communicate with of all of its peers individually, an object just deals with the mediator.  <em><a href=http://www.apress.com/9781484203958>Design Pattern in Swift</a></em></p><figure class=highlight><pre><code class=language-swift data-lang=swift>typealias CommandBlock = CommandPeer -&gt; Any
-enum ProType: String {
-    case Artist = &quot;Artist&quot;
-    case Musician = &quot;Musician&quot;
-    case PartyPlanner = &quot;Party Planner&quot;
-    case Other = &quot;Other skills&quot;
-    case None = &quot;No registered skills&quot;
-}
-enum TaskStatus: String {
-    case S0_Created = &quot;Task Created&quot;
-    case S1_Submited = &quot;Task Submitted&quot;
-    case S2_BroadCasted = &quot;Task sent to pros&quot;
-    case S3_QuoteGathered = &quot;Gathered quotes from pros&quot;
-    case S4_ProChosen = &quot;Customer has chosen the pro to work with&quot;
-    case S5_SendToPro = &quot;Task Center has sent the task to the pro&quot;
-    case S6_ProFinished = &quot;Pro has finished the task&quot;
-    case S7_CustomConfirmWork = &quot;Customer has confirmed the finished work&quot;
-    case Unknown = &quot;Some unknown state&quot;
-}
-// To make it simply, a customer and a pro are both command peers. They can initiate a task as a customer or finish a task as a pro.
-protocol CommandPeer: CustomStringConvertible {
-    var name:String { get }
-    var tasks:[Task] { get set }
-    var works:[Task] { get set }
-    var isPro: Bool { get }
-    var proType: ProType { get }
+<!DOCTYPE html><html xmlns=http://www.w3.org/1999/xhtml xml:lang=en lang=en-us><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><title>A Design Pattern Story in Swift – Chapter 20: Mediator</title><meta name=description content="Artists paint, musicians compose, different jobs for different pros.  It’s not easy for a person to find a pro directly to do a job without some sort of agen..."><link rel=canonical href=http://audreyli.me/2015/07/18/a-design-pattern-story-in-swift-chapter-20-mediator/ ><link rel=stylesheet href="http://fonts.googleapis.com/css?family=RobotoDraft:100,300,400|Roboto:300,300italic,400"><link rel=stylesheet href=https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/css/bootstrap.css><link rel=stylesheet href=https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css><link rel=stylesheet href=/assets/stylesheets/style-b5460305d5.min.css><link rel="shortcut icon" href=/assets/favicon.ico><link rel=apple-touch-icon sizes=57x57 href=/assets/images/favicons/apple-touch-icon-57x57.png><link rel=apple-touch-icon sizes=60x60 href=/assets/images/favicons/apple-touch-icon-60x60.png><link rel=apple-touch-icon sizes=72x72 href=/assets/images/favicons/apple-touch-icon-72x72.png><link rel=apple-touch-icon sizes=76x76 href=/assets/images/favicons/apple-touch-icon-76x76.png><link rel=apple-touch-icon sizes=114x114 href=/assets/images/favicons/apple-touch-icon-114x114.png><link rel=apple-touch-icon sizes=120x120 href=/assets/images/favicons/apple-touch-icon-120x120.png><link rel=apple-touch-icon sizes=144x144 href=/assets/images/favicons/apple-touch-icon-144x144.png><link rel=apple-touch-icon sizes=152x152 href=/assets/images/favicons/apple-touch-icon-152x152.png><link rel=apple-touch-icon sizes=180x180 href=/assets/images/favicons/apple-touch-icon-180x180.png><link rel=icon type=image/png href=/assets/images/favicons/favicon-32x32.png sizes=32x32><link type=application/atom+xml rel=alternate href=http://audreyli.me/feed.xml title=vidaaudrey-blog></head><body><nav id=push_sidebar><div class=social-icons><img src=/assets/images/audrey-li.jpg alt="Audrey's Photo" class=img-circle> <a href=https://github.com/vidaaudrey title="Audrey's Github"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-github fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.facebook.com/audreyauli title="Audrey's Facebook"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-facebook fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.linkedin.com/in/audreyauli title="Audrey's Google Plus"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i> </span></a><a href=/assets/images/wechat.jpg title="Audrey's Wechat"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-weixin fa-stack-1x fa-inverse"></i></span></a></div><ul><li><a href=/ >Home</a></li><li><a href=/portfolio>Portfolio</a></li><li><a href=/archives>Archives</a></li><li><a href=/atom.xml>Feed</a></li><li class=rss-subscribe>subscribe <a href=feed.xml>via RSS</a></li><li><a href=/about>About</a></li></ul></nav><div id=body-wrap><header class=nav-down id=wrapper><div class=container-fluid><a class=navbar-brand href=/ ><img alt=Brand src=/assets/images/normal/logo-dark-round.png></a><span class=nav_trigger><i class="fa fa-bars"></i></span></div></header><div class="jumbotron jumbotron-post-plain"><div class=fullwidth-wrapper><div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12"><div class=main-wrap><h2 class=post-title>A Design Pattern Story in Swift – Chapter 20: Mediator</h2><p class=post-date>18 Jul 2015</p></div></div></div></div><main class=row><div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12"><div class=main-wrap><div class="post card post-content"><div class=page title="Page 414"><div class=layoutArea><div class=column><p><span>Artists paint, musicians compose, different jobs for different pros.  It&#8217;s not easy for a person to find a pro directly to do a job without some sort of agent in the middle, and even harder for a pro to find a client among all the people.  A command mediator (aka. command dispatch center) takes all the burden away. It can process task according to the task requirement such as:</span></p><ul><li class=p1>Group task will be sent to all the pros who can do the jobs</li><li class=p1>Normal task will be sent to the appropriate pros and get their quotations</li><li class=p1>Once the user has chosen the pro based on the quotations, the mediator will send the task to the chosen pro</li><li class=p1>Upon getting the work back from the pro, the mediator will send the work to the customer for confirmation</li></ul><p>The mediator pattern simplifies peer-to-peer communication between objects by introducing a mediator object that acts as a communications broker between the objects. Instead of having to keep track of and communicate with of all of its peers individually, an object just deals with the mediator.  <em><a href=http://www.apress.com/9781484203958>Design Pattern in Swift</a></em></p><figure class=highlight><pre><code class=language-swift data-lang=swift><span class=k>typealias</span> <span class=n>CommandBlock</span> <span class=o>=</span> <span class=n>CommandPeer</span> <span class=o>-&gt;</span> <span class=n>Any</span>
+<span class=k>enum</span> <span class=nl>ProType</span><span class=p>:</span> <span class=n>String</span> <span class=p>{</span>
+    <span class=k>case</span> <span class=n>Artist</span> <span class=o>=</span> <span class=s>&quot;Artist&quot;</span>
+    <span class=k>case</span> <span class=n>Musician</span> <span class=o>=</span> <span class=s>&quot;Musician&quot;</span>
+    <span class=k>case</span> <span class=n>PartyPlanner</span> <span class=o>=</span> <span class=s>&quot;Party Planner&quot;</span>
+    <span class=k>case</span> <span class=n>Other</span> <span class=o>=</span> <span class=s>&quot;Other skills&quot;</span>
+    <span class=k>case</span> <span class=n>None</span> <span class=o>=</span> <span class=s>&quot;No registered skills&quot;</span>
+<span class=p>}</span>
+<span class=k>enum</span> <span class=nl>TaskStatus</span><span class=p>:</span> <span class=n>String</span> <span class=p>{</span>
+    <span class=k>case</span> <span class=n>S0_Created</span> <span class=o>=</span> <span class=s>&quot;Task Created&quot;</span>
+    <span class=k>case</span> <span class=n>S1_Submited</span> <span class=o>=</span> <span class=s>&quot;Task Submitted&quot;</span>
+    <span class=k>case</span> <span class=n>S2_BroadCasted</span> <span class=o>=</span> <span class=s>&quot;Task sent to pros&quot;</span>
+    <span class=k>case</span> <span class=n>S3_QuoteGathered</span> <span class=o>=</span> <span class=s>&quot;Gathered quotes from pros&quot;</span>
+    <span class=k>case</span> <span class=n>S4_ProChosen</span> <span class=o>=</span> <span class=s>&quot;Customer has chosen the pro to work with&quot;</span>
+    <span class=k>case</span> <span class=n>S5_SendToPro</span> <span class=o>=</span> <span class=s>&quot;Task Center has sent the task to the pro&quot;</span>
+    <span class=k>case</span> <span class=n>S6_ProFinished</span> <span class=o>=</span> <span class=s>&quot;Pro has finished the task&quot;</span>
+    <span class=k>case</span> <span class=n>S7_CustomConfirmWork</span> <span class=o>=</span> <span class=s>&quot;Customer has confirmed the finished work&quot;</span>
+    <span class=k>case</span> <span class=n>Unknown</span> <span class=o>=</span> <span class=s>&quot;Some unknown state&quot;</span>
+<span class=p>}</span>
+<span class=c1>// To make it simply, a customer and a pro are both command peers. They can initiate a task as a customer or finish a task as a pro.</span>
+<span class=k>protocol</span> <span class=nl>CommandPeer</span><span class=p>:</span> <span class=n>CustomStringConvertible</span> <span class=p>{</span>
+    <span class=k>var</span> <span class=nl>name</span><span class=p>:</span><span class=n>String</span> <span class=p>{</span> <span class=kr>get</span> <span class=p>}</span>
+    <span class=k>var</span> <span class=nl>tasks</span><span class=p>:[</span><span class=n>Task</span><span class=p>]</span> <span class=p>{</span> <span class=kr>get</span> <span class=kr>set</span> <span class=p>}</span>
+    <span class=k>var</span> <span class=nl>works</span><span class=p>:[</span><span class=n>Task</span><span class=p>]</span> <span class=p>{</span> <span class=kr>get</span> <span class=kr>set</span> <span class=p>}</span>
+    <span class=k>var</span> <span class=nl>isPro</span><span class=p>:</span> <span class=n>Bool</span> <span class=p>{</span> <span class=kr>get</span> <span class=p>}</span>
+    <span class=k>var</span> <span class=nl>proType</span><span class=p>:</span> <span class=n>ProType</span> <span class=p>{</span> <span class=kr>get</span> <span class=p>}</span>
 
-    func choosePro(var task: Task) -&gt; Task
-    func confirmWork(var task: Task) -&gt; Task
-    func submitQuote(task: Task) -&gt; (name: String, price: Int, message: String)
-    func finishTask(var task: Task) -&gt; (task:Task, result: Any?)
-}
+    <span class=k>func</span> <span class=n>choosePro</span><span class=p>(</span><span class=k>var</span> <span class=nl>task</span><span class=p>:</span> <span class=n>Task</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Task</span>
+    <span class=k>func</span> <span class=n>confirmWork</span><span class=p>(</span><span class=k>var</span> <span class=nl>task</span><span class=p>:</span> <span class=n>Task</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Task</span>
+    <span class=k>func</span> <span class=n>submitQuote</span><span class=p>(</span><span class=nl>task</span><span class=p>:</span> <span class=n>Task</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=n>String</span><span class=p>,</span> <span class=nl>price</span><span class=p>:</span> <span class=n>Int</span><span class=p>,</span> <span class=nl>message</span><span class=p>:</span> <span class=n>String</span><span class=p>)</span>
+    <span class=k>func</span> <span class=n>finishTask</span><span class=p>(</span><span class=k>var</span> <span class=nl>task</span><span class=p>:</span> <span class=n>Task</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=p>(</span><span class=nl>task</span><span class=p>:</span><span class=n>Task</span><span class=p>,</span> <span class=nl>result</span><span class=p>:</span> <span class=n>Any</span><span class=o>?</span><span class=p>)</span>
+<span class=p>}</span>
 
-// All that is needed to make a task a command, leaving for possibilities of different tasks and different task mediators.  If I use class implementation, the commandMediator just need to use the command protocol to talk, instead of the concrete task. But I used struct for concret task. As a result, the mediator is coupled with the task struct implementation.
-protocol Command {
-    var id: Int { get }
-    var name: String { get }
-    var proType: ProType { get }
-    var isGroupTask: Bool { get set }
-    var startBy:String { get set }
-    var finishedBy: String { get set }
-    var status: TaskStatus { get set }
-    var quotes: [(name:String, price: Int, message: String)] { get set }
-    var function:CommandBlock { get }
-    func execute(peer: CommandPeer) -&gt; Any
-}
+<span class=c1>// All that is needed to make a task a command, leaving for possibilities of different tasks and different task mediators.  If I use class implementation, the commandMediator just need to use the command protocol to talk, instead of the concrete task. But I used struct for concret task. As a result, the mediator is coupled with the task struct implementation.</span>
+<span class=k>protocol</span> <span class=n>Command</span> <span class=p>{</span>
+    <span class=k>var</span> <span class=kt>id</span><span class=o>:</span> <span class=n>Int</span> <span class=p>{</span> <span class=kr>get</span> <span class=p>}</span>
+    <span class=k>var</span> <span class=nl>name</span><span class=p>:</span> <span class=n>String</span> <span class=p>{</span> <span class=kr>get</span> <span class=p>}</span>
+    <span class=k>var</span> <span class=nl>proType</span><span class=p>:</span> <span class=n>ProType</span> <span class=p>{</span> <span class=kr>get</span> <span class=p>}</span>
+    <span class=k>var</span> <span class=nl>isGroupTask</span><span class=p>:</span> <span class=n>Bool</span> <span class=p>{</span> <span class=kr>get</span> <span class=kr>set</span> <span class=p>}</span>
+    <span class=k>var</span> <span class=nl>startBy</span><span class=p>:</span><span class=n>String</span> <span class=p>{</span> <span class=kr>get</span> <span class=kr>set</span> <span class=p>}</span>
+    <span class=k>var</span> <span class=nl>finishedBy</span><span class=p>:</span> <span class=n>String</span> <span class=p>{</span> <span class=kr>get</span> <span class=kr>set</span> <span class=p>}</span>
+    <span class=k>var</span> <span class=nl>status</span><span class=p>:</span> <span class=n>TaskStatus</span> <span class=p>{</span> <span class=kr>get</span> <span class=kr>set</span> <span class=p>}</span>
+    <span class=k>var</span> <span class=nl>quotes</span><span class=p>:</span> <span class=p>[(</span><span class=nl>name</span><span class=p>:</span><span class=n>String</span><span class=p>,</span> <span class=nl>price</span><span class=p>:</span> <span class=n>Int</span><span class=p>,</span> <span class=nl>message</span><span class=p>:</span> <span class=n>String</span><span class=p>)]</span> <span class=p>{</span> <span class=kr>get</span> <span class=kr>set</span> <span class=p>}</span>
+    <span class=k>var</span> <span class=nl>function</span><span class=p>:</span><span class=n>CommandBlock</span> <span class=p>{</span> <span class=kr>get</span> <span class=p>}</span>
+    <span class=k>func</span> <span class=n>execute</span><span class=p>(</span><span class=nl>peer</span><span class=p>:</span> <span class=n>CommandPeer</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Any</span>
+<span class=p>}</span>
 
-// commandMediator is kind of a task dispatch center. When the center receives tasks, it will look at the task configuration:
-// * Group task -&gt; Send to every registered pro who can do the task and get the work back 
-// * Regular task  -&gt; Check status of the task
-// *** - Submited -&gt; Send the task to the pros who can do the task and get their quotation
-// *** - ProChosen -&gt; Send the task to the chosen pros and get the final work, then send the work to the customer for confirmation
-// For simplicity reason, a lof of things are left behind, such as what if the customer did not approve the work? Can I always expect work being returned from a pro? Can the pro be more proactive and submit their work at their own time? How do we track payment, can we keep only one copy of the task... Well, too many cases @_@
-class CommandMediator {
-    private var peers = [String:CommandPeer]()
+<span class=c1>// commandMediator is kind of a task dispatch center. When the center receives tasks, it will look at the task configuration:</span>
+<span class=c1>// * Group task -&gt; Send to every registered pro who can do the task and get the work back </span>
+<span class=c1>// * Regular task  -&gt; Check status of the task</span>
+<span class=c1>// *** - Submited -&gt; Send the task to the pros who can do the task and get their quotation</span>
+<span class=c1>// *** - ProChosen -&gt; Send the task to the chosen pros and get the final work, then send the work to the customer for confirmation</span>
+<span class=c1>// For simplicity reason, a lof of things are left behind, such as what if the customer did not approve the work? Can I always expect work being returned from a pro? Can the pro be more proactive and submit their work at their own time? How do we track payment, can we keep only one copy of the task... Well, too many cases @_@</span>
+<span class=k>class</span> <span class=n>CommandMediator</span> <span class=p>{</span>
+    <span class=n>private</span> <span class=k>var</span> <span class=n>peers</span> <span class=o>=</span> <span class=p>[</span><span class=nl>String</span><span class=p>:</span><span class=n>CommandPeer</span><span class=p>]()</span>
 
-    func registerPeer(peer:CommandPeer) {
-        peers[peer.name] = peer
-    }
+    <span class=k>func</span> <span class=n>registerPeer</span><span class=p>(</span><span class=nl>peer</span><span class=p>:</span><span class=n>CommandPeer</span><span class=p>)</span> <span class=p>{</span>
+        <span class=n>peers</span><span class=p>[</span><span class=n>peer</span><span class=p>.</span><span class=n>name</span><span class=p>]</span> <span class=o>=</span> <span class=n>peer</span>
+    <span class=p>}</span>
 
-    func unregisterPeer(peer:CommandPeer) {
-        peers.removeValueForKey(peer.name)
-    }
-    // the core control logic, evaluate the task configuration and process accordingly.
-    func dispatchCommand(caller:CommandPeer, task:Task) -&gt; Any? {
-        var result: Any?
-        // this task will be execute by everyone who can do the work
-        if task.isGroupTask {
-            result = sendTaskToChosenProAndGetWork(caller, task: task, isGroupTask: true)
-        } else {
-            switch task.status {
-            case .S1_Submited: result = sendTaskAndGatherQuotes(caller, task: task)
-            case .S4_ProChosen: result = sendTaskToChosenProAndGetWork(caller, task: task)
-            case .Unknown:  print(&quot;Something unknow, check the status&quot;)
-            default: print(&quot;do nothing, check later.....!&quot;)
-            }
-        }
-        return result
-    }
+    <span class=k>func</span> <span class=n>unregisterPeer</span><span class=p>(</span><span class=nl>peer</span><span class=p>:</span><span class=n>CommandPeer</span><span class=p>)</span> <span class=p>{</span>
+        <span class=n>peers</span><span class=p>.</span><span class=n>removeValueForKey</span><span class=p>(</span><span class=n>peer</span><span class=p>.</span><span class=n>name</span><span class=p>)</span>
+    <span class=p>}</span>
+    <span class=c1>// the core control logic, evaluate the task configuration and process accordingly.</span>
+    <span class=k>func</span> <span class=n>dispatchCommand</span><span class=p>(</span><span class=nl>caller</span><span class=p>:</span><span class=n>CommandPeer</span><span class=p>,</span> <span class=nl>task</span><span class=p>:</span><span class=n>Task</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Any</span><span class=o>?</span> <span class=p>{</span>
+        <span class=k>var</span> <span class=nl>result</span><span class=p>:</span> <span class=n>Any</span><span class=o>?</span>
+        <span class=c1>// this task will be execute by everyone who can do the work</span>
+        <span class=k>if</span> <span class=n>task</span><span class=p>.</span><span class=n>isGroupTask</span> <span class=p>{</span>
+            <span class=n>result</span> <span class=o>=</span> <span class=n>sendTaskToChosenProAndGetWork</span><span class=p>(</span><span class=n>caller</span><span class=p>,</span> <span class=nl>task</span><span class=p>:</span> <span class=n>task</span><span class=p>,</span> <span class=nl>isGroupTask</span><span class=p>:</span> <span class=nb>true</span><span class=p>)</span>
+        <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+            <span class=k>switch</span> <span class=n>task</span><span class=p>.</span><span class=n>status</span> <span class=p>{</span>
+            <span class=k>case</span> <span class=p>.</span><span class=nl>S1_Submited</span><span class=p>:</span> <span class=n>result</span> <span class=o>=</span> <span class=n>sendTaskAndGatherQuotes</span><span class=p>(</span><span class=n>caller</span><span class=p>,</span> <span class=nl>task</span><span class=p>:</span> <span class=n>task</span><span class=p>)</span>
+            <span class=k>case</span> <span class=p>.</span><span class=nl>S4_ProChosen</span><span class=p>:</span> <span class=n>result</span> <span class=o>=</span> <span class=n>sendTaskToChosenProAndGetWork</span><span class=p>(</span><span class=n>caller</span><span class=p>,</span> <span class=nl>task</span><span class=p>:</span> <span class=n>task</span><span class=p>)</span>
+            <span class=k>case</span> <span class=p>.</span><span class=nl>Unknown</span><span class=p>:</span>  <span class=n>print</span><span class=p>(</span><span class=s>&quot;Something unknow, check the status&quot;</span><span class=p>)</span>
+            <span class=k>default</span><span class=o>:</span> <span class=n>print</span><span class=p>(</span><span class=s>&quot;do nothing, check later.....!&quot;</span><span class=p>)</span>
+            <span class=p>}</span>
+        <span class=p>}</span>
+        <span class=k>return</span> <span class=n>result</span>
+    <span class=p>}</span>
 
-    private func sendTaskAndGatherQuotes(caller: CommandPeer, var task: Task) -&gt; Task {
-        var quotes:[(name: String, price: Int, message: String)] = []
-        for peer in peers.values {
-            if (peer.name != caller.name) &amp;&amp; peer.isPro &amp;&amp; (peer.proType == task.proType) {
-                quotes.append(peer.submitQuote(task))
-            }
-        }
-        task.quotes = quotes
-        task.status = TaskStatus.S3_QuoteGathered
-        return task
-    }
-    private func sendTaskToChosenProAndGetWork(caller: CommandPeer, var task: Task, isGroupTask: Bool = false) -&gt; (task:Task, result: Any?) {
-        var fullResult:(Task, Any?) = (task, nil)
-       // task.status = TaskStatus.S6_ProFinished
-        var groupResult:[Any?] = []
+    <span class=n>private</span> <span class=k>func</span> <span class=n>sendTaskAndGatherQuotes</span><span class=p>(</span><span class=nl>caller</span><span class=p>:</span> <span class=n>CommandPeer</span><span class=p>,</span> <span class=k>var</span> <span class=nl>task</span><span class=p>:</span> <span class=n>Task</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Task</span> <span class=p>{</span>
+        <span class=k>var</span> <span class=nl>quotes</span><span class=p>:[(</span><span class=nl>name</span><span class=p>:</span> <span class=n>String</span><span class=p>,</span> <span class=nl>price</span><span class=p>:</span> <span class=n>Int</span><span class=p>,</span> <span class=nl>message</span><span class=p>:</span> <span class=n>String</span><span class=p>)]</span> <span class=o>=</span> <span class=p>[]</span>
+        <span class=k>for</span> <span class=n>peer</span> <span class=k>in</span> <span class=n>peers</span><span class=p>.</span><span class=n>values</span> <span class=p>{</span>
+            <span class=k>if</span> <span class=p>(</span><span class=n>peer</span><span class=p>.</span><span class=n>name</span> <span class=o>!=</span> <span class=n>caller</span><span class=p>.</span><span class=n>name</span><span class=p>)</span> <span class=o>&amp;&amp;</span> <span class=n>peer</span><span class=p>.</span><span class=n>isPro</span> <span class=o>&amp;&amp;</span> <span class=p>(</span><span class=n>peer</span><span class=p>.</span><span class=n>proType</span> <span class=o>==</span> <span class=n>task</span><span class=p>.</span><span class=n>proType</span><span class=p>)</span> <span class=p>{</span>
+                <span class=n>quotes</span><span class=p>.</span><span class=n>append</span><span class=p>(</span><span class=n>peer</span><span class=p>.</span><span class=n>submitQuote</span><span class=p>(</span><span class=n>task</span><span class=p>))</span>
+            <span class=p>}</span>
+        <span class=p>}</span>
+        <span class=n>task</span><span class=p>.</span><span class=n>quotes</span> <span class=o>=</span> <span class=n>quotes</span>
+        <span class=n>task</span><span class=p>.</span><span class=n>status</span> <span class=o>=</span> <span class=n>TaskStatus</span><span class=p>.</span><span class=n>S3_QuoteGathered</span>
+        <span class=k>return</span> <span class=n>task</span>
+    <span class=p>}</span>
+    <span class=n>private</span> <span class=k>func</span> <span class=n>sendTaskToChosenProAndGetWork</span><span class=p>(</span><span class=nl>caller</span><span class=p>:</span> <span class=n>CommandPeer</span><span class=p>,</span> <span class=k>var</span> <span class=nl>task</span><span class=p>:</span> <span class=n>Task</span><span class=p>,</span> <span class=nl>isGroupTask</span><span class=p>:</span> <span class=n>Bool</span> <span class=o>=</span> <span class=nb>false</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=p>(</span><span class=nl>task</span><span class=p>:</span><span class=n>Task</span><span class=p>,</span> <span class=nl>result</span><span class=p>:</span> <span class=n>Any</span><span class=o>?</span><span class=p>)</span> <span class=p>{</span>
+        <span class=k>var</span> <span class=nl>fullResult</span><span class=p>:(</span><span class=n>Task</span><span class=p>,</span> <span class=n>Any</span><span class=o>?</span><span class=p>)</span> <span class=o>=</span> <span class=p>(</span><span class=n>task</span><span class=p>,</span> <span class=nb>nil</span><span class=p>)</span>
+       <span class=c1>// task.status = TaskStatus.S6_ProFinished</span>
+        <span class=k>var</span> <span class=nl>groupResult</span><span class=p>:[</span><span class=n>Any</span><span class=o>?</span><span class=p>]</span> <span class=o>=</span> <span class=p>[]</span>
 
-        var groupNames:String = &quot;&quot;
-         if !isGroupTask {
-            let choosenProName = task.quotes[0].name
-            for peer in peers.values {
-                if peer.name == choosenProName {
-                    fullResult = peer.finishTask(task)
-                }
-            }
-         } else {
-             for peer in peers.values {
-                if (peer.name != caller.name) &amp;&amp; peer.isPro &amp;&amp; (peer.proType == task.proType) {
-                    groupResult.append(peer.finishTask(task).result)
-                    groupNames += &quot;\(peer.name) , &quot;
-                }
-            }
-        }
-        if groupResult.count &gt; 0 {
-            task.finishedBy = groupNames
-            fullResult = (task, groupResult)
-        }
-        return fullResult
-    }
-}
-
-
-func ==(lhs: Task, rhs: Task) -&gt; Bool {
-    return lhs.id == rhs.id
-}
-
-// Command implementation as Task
-struct Task: Command, CustomStringConvertible {
-    static var idCount = 1
-    let id: Int
-    let name: String
-    var price: Int
-    let function: CommandBlock
-    let proType: ProType
-    var finishedBy: String = &quot;&quot;
-    var startBy: String = &quot;&quot;
-    var isGroupTask: Bool
-    var quotes: [(name:String, price: Int, message: String)] = []
-    var status: TaskStatus { didSet { print(status.rawValue) } } 
-    var description: String {
-        return &quot;\nCurrent Task Info: #\(id)\n --name: \(name) - \(proType.rawValue) job\n --started by: \(startBy) \n --finished by: \(finishedBy)\n --current status: \(status.rawValue)\n --quotations: \(quotes) \n&quot;
-    }
-
-    init(name: String,price: Int, proType: ProType = .Artist, isGroupTask:Bool = false, function: CommandBlock){
-        self.id = Task.idCount++
-        self.name = name
-        self.function = function
-        self.proType = proType
-        self.status = .S0_Created
-        self.price = price
-        self.isGroupTask = isGroupTask
-    }
-    func execute(peer: CommandPeer) -&gt; Any {
-        if peer.proType == self.proType {
-            print(&quot;Passing pro \(peer.name) the job...&quot;)
-            return function(peer)
-        } else {
-            return &quot;Got no work from pro&quot;
-        }
-    }
-
-}
-// CommandPeer implementation as a User, who can be a customer and a pro at the same time
-class User: CommandPeer {
-    var name: String
-    let mediator: CommandMediator
-    var tasks:[Task]
-    var works:[Task]
-    var isPro: Bool = true
-    var proType: ProType
-    var description: String {
-        return &quot;\(name) - \(proType.rawValue)\nTasks: \(tasks.map{$0.name}).  Works:\(works.map{$0.name})\n&quot;
-    }
-    init(name: String, mediator: CommandMediator, isPro: Bool = true, proType: ProType = .None){
-        self.name = name
-        self.mediator = mediator
-        tasks = []
-        works = []
-        self.isPro = isPro
-        self.proType = proType
-        mediator.registerPeer(self)
-    }
-
-    func sendTaskToGroupAndGetFinalWork(var task: Task) -&gt; (task: Task, result: Any?){
-        task.isGroupTask = true
-        tasks.append(task)
-        return mediator.dispatchCommand(self, task: task) as! (Task, Any?)
-    }
-    func sendTaskAndGetTaskWithQuotes(var task: Task) -&gt; Task {
-        task.startBy = name
-        task.status = TaskStatus.S1_Submited
-        tasks.append(task)
-        return mediator.dispatchCommand(self, task: task) as! Task
-    }
-
-    func choseProAndGetFinalWork(var task: Task) -&gt; (task: Task, result: Any?){
-        task.status = TaskStatus.S4_ProChosen
-        return mediator.dispatchCommand(self, task: task) as! (Task, Any?)
-    }
-
-    // function for customer: choose pro and confirm work. Mediator only sends task back if there is at least one quotation.
-    func choosePro(var task: Task) -&gt; Task{
-        // assume customer is business, only randomly choose one quote
-        let index = arc4random_uniform(UInt32(task.quotes.count))
-        task.quotes = [task.quotes[Int(index)]]
-        print(&quot;Choose the pro\(task.quotes[0])&quot;)
-        task.status = TaskStatus.S4_ProChosen
-        task.finishedBy = task.quotes[0].name
-        return task
-    }
-
-    func confirmWork(var task: Task) -&gt; Task{
-        let index = tasks.indexOf {$0.id == task.id}
-        task.status = .S7_CustomConfirmWork
-        if index != nil {
-            tasks[index!] = task
-        }
-        return task
-    }
-
-    // function for pro: submit quotes and finish task
-    func submitQuote(task: Task) -&gt; (name: String, price: Int, message: String) {
-        let quote = task.price * (Int(arc4random_uniform(3)) + 1)
-        let message = &quot;Some random message for the customer: choose me...&quot;
-        return (name, quote, message)
-    }
-
-    // let&#39;s assume a pro always finishes the job and give back the result now. Deal with bad pros later
-    func finishTask(var task: Task) -&gt; (task:Task, result: Any?){
-        let result = task.execute(self)
-        task.finishedBy = name
-        task.status = TaskStatus.S6_ProFinished
-        self.works.append(task)
-        return (task, result)
-    }
-
-}
-
-// Testing. Create some tasks and users
-let partyTask = Task(name: &quot;Host a Party of the Century&quot;, price: 2000000, proType: .PartyPlanner) { peer in
-    print(&quot;\(peer.name) is doing the job&quot;)
-    print(&quot;Inviting people...&quot;)
-    return &quot;Final work: the greatest party ever...&quot;
-}
-let partyTask1 = Task(name: &quot;Host a Party of the Next Century&quot;, price: 2220000, proType: .PartyPlanner) { peer in
-    print(&quot;\(peer.name) is doing the job&quot;)
-    print(&quot;Inviting people...&quot;)
-    return &quot;Final work: the greatest party ever....&quot;
-}
-let musicTask = Task(name: &quot;Write A Mountain-Moving Song&quot;, price: 80000000, proType: .Musician) { peer in
-    print(&quot;\(peer.name) is doing the job...&quot;)
-    print(&quot;Composing ♭♮♯♯♮♭♭♫♬♩♪...&quot;)
-    return &quot;Final work: a beautiful song&quot;
-}
-let paintTask = Task(name: &quot;The Finest Paint Collection&quot;, price: 2010000, proType: .Artist, isGroupTask: true) { peer in
-    print(&quot;\(peer.name) is doing the job...&quot;)
-    print(&quot;Painting...&quot;)
-    return &quot;Final work: Paint Work&quot;
-}
-
-let mediator = CommandMediator()
-let u1 = User(name: &quot;The Queue &quot;, mediator: mediator)
-var u2 = User(name: &quot;Michelangelo&quot;, mediator: mediator, proType: .Artist)
-let u3 = User(name: &quot;Johannes&quot;, mediator: mediator, proType: .Musician)
-let u6 = User(name: &quot;Ludwig&quot;, mediator: mediator, proType: .Musician)
-let u4 = User(name: &quot;Eugène&quot;, mediator: mediator, proType: .Artist)
-let u5 = User(name: &quot;Josh&quot;, mediator: mediator, proType: .PartyPlanner)
-let tasks = [partyTask, paintTask, musicTask, partyTask1]
-for task in tasks {
-    if task.isGroupTask {
-        print(&quot;\nSending a task called [\(task.name)]  that require a GROUP to finish....&quot;)
-        let groupResults = u1.sendTaskToGroupAndGetFinalWork(task)
-        print(&quot;The final work: \(groupResults.1)&quot;)
-    } else {
-        print(&quot;\nCreating a task called [\(task.name)] that require a single pro to finish ...&quot;)
-        let taskWithQuotes = u1.sendTaskAndGetTaskWithQuotes(task)
-        print(taskWithQuotes)
-        print(&quot;Getting finished work and task....&quot;)
-        let taskFinishedByProAndWork = u1.choseProAndGetFinalWork(taskWithQuotes)
-        print(&quot;The final work: \(taskFinishedByProAndWork.1)&quot;)
-        u1.confirmWork((taskFinishedByProAndWork.0))
-    }
-}
+        <span class=k>var</span> <span class=nl>groupNames</span><span class=p>:</span><span class=n>String</span> <span class=o>=</span> <span class=s>&quot;&quot;</span>
+         <span class=k>if</span> <span class=o>!</span><span class=n>isGroupTask</span> <span class=p>{</span>
+            <span class=k>let</span> <span class=n>choosenProName</span> <span class=o>=</span> <span class=n>task</span><span class=p>.</span><span class=n>quotes</span><span class=p>[</span><span class=mi>0</span><span class=p>].</span><span class=n>name</span>
+            <span class=k>for</span> <span class=n>peer</span> <span class=k>in</span> <span class=n>peers</span><span class=p>.</span><span class=n>values</span> <span class=p>{</span>
+                <span class=k>if</span> <span class=n>peer</span><span class=p>.</span><span class=n>name</span> <span class=o>==</span> <span class=n>choosenProName</span> <span class=p>{</span>
+                    <span class=n>fullResult</span> <span class=o>=</span> <span class=n>peer</span><span class=p>.</span><span class=n>finishTask</span><span class=p>(</span><span class=n>task</span><span class=p>)</span>
+                <span class=p>}</span>
+            <span class=p>}</span>
+         <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+             <span class=k>for</span> <span class=n>peer</span> <span class=k>in</span> <span class=n>peers</span><span class=p>.</span><span class=n>values</span> <span class=p>{</span>
+                <span class=k>if</span> <span class=p>(</span><span class=n>peer</span><span class=p>.</span><span class=n>name</span> <span class=o>!=</span> <span class=n>caller</span><span class=p>.</span><span class=n>name</span><span class=p>)</span> <span class=o>&amp;&amp;</span> <span class=n>peer</span><span class=p>.</span><span class=n>isPro</span> <span class=o>&amp;&amp;</span> <span class=p>(</span><span class=n>peer</span><span class=p>.</span><span class=n>proType</span> <span class=o>==</span> <span class=n>task</span><span class=p>.</span><span class=n>proType</span><span class=p>)</span> <span class=p>{</span>
+                    <span class=n>groupResult</span><span class=p>.</span><span class=n>append</span><span class=p>(</span><span class=n>peer</span><span class=p>.</span><span class=n>finishTask</span><span class=p>(</span><span class=n>task</span><span class=p>).</span><span class=n>result</span><span class=p>)</span>
+                    <span class=n>groupNames</span> <span class=o>+=</span> <span class=s>&quot;\(peer.name) , &quot;</span>
+                <span class=p>}</span>
+            <span class=p>}</span>
+        <span class=p>}</span>
+        <span class=k>if</span> <span class=n>groupResult</span><span class=p>.</span><span class=n>count</span> <span class=o>&gt;</span> <span class=mi>0</span> <span class=p>{</span>
+            <span class=n>task</span><span class=p>.</span><span class=n>finishedBy</span> <span class=o>=</span> <span class=n>groupNames</span>
+            <span class=n>fullResult</span> <span class=o>=</span> <span class=p>(</span><span class=n>task</span><span class=p>,</span> <span class=n>groupResult</span><span class=p>)</span>
+        <span class=p>}</span>
+        <span class=k>return</span> <span class=n>fullResult</span>
+    <span class=p>}</span>
+<span class=p>}</span>
 
 
-let users = [u1, u2, u3, u4, u5, u6]
-users.map{print(&quot;\($0.description)&quot;)}</code></pre></figure><p><a href=/assets/images/wp-content/uploads/2015/07/mediator.png><img class="aligncenter size-full wp-image-1077" src=/assets/images/wp-content/uploads/2015/07/mediator.png alt=mediator width=746 height=970></a></p><p>Upon seeing the tasks, I can&#8217;t help wonder: don&#8217;t we all serve the pleasure of the queue?</p></div></div></div></div></article></div></div><footer class=site-footer><div class=wrapper><h2 class=footer-heading></h2><div class=footer-col-wrapper><div class="footer-col footer-col-1"><ul class=contact-list><li></li><li><a href=mailto:me@audreyli.me>me@audreyli.me</a></li></ul></div><div class="footer-col footer-col-2"><ul class=social-media-list><li><a href=https://twitter.com/vidaaudrey><span class="icon icon--twitter"><svg viewBox="0 0 16 16"><path fill=#828282 d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809
-                  c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27
-                  c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767
-                  c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206
-                  C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271
-                  c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469
-                  c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg> </span><span class=username>vidaaudrey</span></a></li></ul></div><div class="footer-col footer-col-3"><p class=text>Audrey Li's personal blog</p></div></div></div></footer><script src=https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js></script><script src=https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/js/bootstrap.js></script><script src=/assets/javascript/index-f8fab38504.min.js></script></body></html>
+<span class=k>func</span> <span class=o>==</span><span class=p>(</span><span class=nl>lhs</span><span class=p>:</span> <span class=n>Task</span><span class=p>,</span> <span class=nl>rhs</span><span class=p>:</span> <span class=n>Task</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Bool</span> <span class=p>{</span>
+    <span class=k>return</span> <span class=n>lhs</span><span class=p>.</span><span class=kt>id</span> <span class=o>==</span> <span class=n>rhs</span><span class=p>.</span><span class=kt>id</span>
+<span class=p>}</span>
+
+<span class=c1>// Command implementation as Task</span>
+<span class=k>struct</span> <span class=nl>Task</span><span class=p>:</span> <span class=n>Command</span><span class=p>,</span> <span class=n>CustomStringConvertible</span> <span class=p>{</span>
+    <span class=k>static</span> <span class=k>var</span> <span class=n>idCount</span> <span class=o>=</span> <span class=mi>1</span>
+    <span class=k>let</span> <span class=kt>id</span><span class=o>:</span> <span class=n>Int</span>
+    <span class=k>let</span> <span class=nl>name</span><span class=p>:</span> <span class=n>String</span>
+    <span class=k>var</span> <span class=nl>price</span><span class=p>:</span> <span class=n>Int</span>
+    <span class=k>let</span> <span class=nl>function</span><span class=p>:</span> <span class=n>CommandBlock</span>
+    <span class=k>let</span> <span class=nl>proType</span><span class=p>:</span> <span class=n>ProType</span>
+    <span class=k>var</span> <span class=nl>finishedBy</span><span class=p>:</span> <span class=n>String</span> <span class=o>=</span> <span class=s>&quot;&quot;</span>
+    <span class=k>var</span> <span class=nl>startBy</span><span class=p>:</span> <span class=n>String</span> <span class=o>=</span> <span class=s>&quot;&quot;</span>
+    <span class=k>var</span> <span class=nl>isGroupTask</span><span class=p>:</span> <span class=n>Bool</span>
+    <span class=k>var</span> <span class=nl>quotes</span><span class=p>:</span> <span class=p>[(</span><span class=nl>name</span><span class=p>:</span><span class=n>String</span><span class=p>,</span> <span class=nl>price</span><span class=p>:</span> <span class=n>Int</span><span class=p>,</span> <span class=nl>message</span><span class=p>:</span> <span class=n>String</span><span class=p>)]</span> <span class=o>=</span> <span class=p>[]</span>
+    <span class=k>var</span> <span class=nl>status</span><span class=p>:</span> <span class=n>TaskStatus</span> <span class=p>{</span> <span class=kr>didSet</span> <span class=p>{</span> <span class=n>print</span><span class=p>(</span><span class=n>status</span><span class=p>.</span><span class=n>rawValue</span><span class=p>)</span> <span class=p>}</span> <span class=p>}</span> 
+    <span class=k>var</span> <span class=nl>description</span><span class=p>:</span> <span class=n>String</span> <span class=p>{</span>
+        <span class=k>return</span> <span class=s>&quot;</span><span class=se>\n</span><span class=s>Current Task Info: #\(id)</span><span class=se>\n</span><span class=s> --name: \(name) - \(proType.rawValue) job</span><span class=se>\n</span><span class=s> --started by: \(startBy) </span><span class=se>\n</span><span class=s> --finished by: \(finishedBy)</span><span class=se>\n</span><span class=s> --current status: \(status.rawValue)</span><span class=se>\n</span><span class=s> --quotations: \(quotes) </span><span class=se>\n</span><span class=s>&quot;</span>
+    <span class=p>}</span>
+
+    <span class=k>init</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=n>String</span><span class=p>,</span><span class=nl>price</span><span class=p>:</span> <span class=n>Int</span><span class=p>,</span> <span class=nl>proType</span><span class=p>:</span> <span class=n>ProType</span> <span class=o>=</span> <span class=p>.</span><span class=n>Artist</span><span class=p>,</span> <span class=nl>isGroupTask</span><span class=p>:</span><span class=n>Bool</span> <span class=o>=</span> <span class=nb>false</span><span class=p>,</span> <span class=nl>function</span><span class=p>:</span> <span class=n>CommandBlock</span><span class=p>){</span>
+        <span class=nb>self</span><span class=p>.</span><span class=kt>id</span> <span class=o>=</span> <span class=n>Task</span><span class=p>.</span><span class=n>idCount</span><span class=o>++</span>
+        <span class=nb>self</span><span class=p>.</span><span class=n>name</span> <span class=o>=</span> <span class=n>name</span>
+        <span class=nb>self</span><span class=p>.</span><span class=n>function</span> <span class=o>=</span> <span class=n>function</span>
+        <span class=nb>self</span><span class=p>.</span><span class=n>proType</span> <span class=o>=</span> <span class=n>proType</span>
+        <span class=nb>self</span><span class=p>.</span><span class=n>status</span> <span class=o>=</span> <span class=p>.</span><span class=n>S0_Created</span>
+        <span class=nb>self</span><span class=p>.</span><span class=n>price</span> <span class=o>=</span> <span class=n>price</span>
+        <span class=nb>self</span><span class=p>.</span><span class=n>isGroupTask</span> <span class=o>=</span> <span class=n>isGroupTask</span>
+    <span class=p>}</span>
+    <span class=k>func</span> <span class=n>execute</span><span class=p>(</span><span class=nl>peer</span><span class=p>:</span> <span class=n>CommandPeer</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Any</span> <span class=p>{</span>
+        <span class=k>if</span> <span class=n>peer</span><span class=p>.</span><span class=n>proType</span> <span class=o>==</span> <span class=nb>self</span><span class=p>.</span><span class=n>proType</span> <span class=p>{</span>
+            <span class=n>print</span><span class=p>(</span><span class=s>&quot;Passing pro \(peer.name) the job...&quot;</span><span class=p>)</span>
+            <span class=k>return</span> <span class=n>function</span><span class=p>(</span><span class=n>peer</span><span class=p>)</span>
+        <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+            <span class=k>return</span> <span class=s>&quot;Got no work from pro&quot;</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+
+<span class=p>}</span>
+<span class=c1>// CommandPeer implementation as a User, who can be a customer and a pro at the same time</span>
+<span class=k>class</span> <span class=nl>User</span><span class=p>:</span> <span class=n>CommandPeer</span> <span class=p>{</span>
+    <span class=k>var</span> <span class=nl>name</span><span class=p>:</span> <span class=n>String</span>
+    <span class=k>let</span> <span class=nl>mediator</span><span class=p>:</span> <span class=n>CommandMediator</span>
+    <span class=k>var</span> <span class=nl>tasks</span><span class=p>:[</span><span class=n>Task</span><span class=p>]</span>
+    <span class=k>var</span> <span class=nl>works</span><span class=p>:[</span><span class=n>Task</span><span class=p>]</span>
+    <span class=k>var</span> <span class=nl>isPro</span><span class=p>:</span> <span class=n>Bool</span> <span class=o>=</span> <span class=nb>true</span>
+    <span class=k>var</span> <span class=nl>proType</span><span class=p>:</span> <span class=n>ProType</span>
+    <span class=k>var</span> <span class=nl>description</span><span class=p>:</span> <span class=n>String</span> <span class=p>{</span>
+        <span class=k>return</span> <span class=s>&quot;\(name) - \(proType.rawValue)</span><span class=se>\n</span><span class=s>Tasks: \(tasks.map{$0.name}).  Works:\(works.map{$0.name})</span><span class=se>\n</span><span class=s>&quot;</span>
+    <span class=p>}</span>
+    <span class=k>init</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=n>String</span><span class=p>,</span> <span class=nl>mediator</span><span class=p>:</span> <span class=n>CommandMediator</span><span class=p>,</span> <span class=nl>isPro</span><span class=p>:</span> <span class=n>Bool</span> <span class=o>=</span> <span class=nb>true</span><span class=p>,</span> <span class=nl>proType</span><span class=p>:</span> <span class=n>ProType</span> <span class=o>=</span> <span class=p>.</span><span class=n>None</span><span class=p>){</span>
+        <span class=nb>self</span><span class=p>.</span><span class=n>name</span> <span class=o>=</span> <span class=n>name</span>
+        <span class=nb>self</span><span class=p>.</span><span class=n>mediator</span> <span class=o>=</span> <span class=n>mediator</span>
+        <span class=n>tasks</span> <span class=o>=</span> <span class=p>[]</span>
+        <span class=n>works</span> <span class=o>=</span> <span class=p>[]</span>
+        <span class=nb>self</span><span class=p>.</span><span class=n>isPro</span> <span class=o>=</span> <span class=n>isPro</span>
+        <span class=nb>self</span><span class=p>.</span><span class=n>proType</span> <span class=o>=</span> <span class=n>proType</span>
+        <span class=n>mediator</span><span class=p>.</span><span class=n>registerPeer</span><span class=p>(</span><span class=nb>self</span><span class=p>)</span>
+    <span class=p>}</span>
+
+    <span class=k>func</span> <span class=n>sendTaskToGroupAndGetFinalWork</span><span class=p>(</span><span class=k>var</span> <span class=nl>task</span><span class=p>:</span> <span class=n>Task</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=p>(</span><span class=nl>task</span><span class=p>:</span> <span class=n>Task</span><span class=p>,</span> <span class=nl>result</span><span class=p>:</span> <span class=n>Any</span><span class=o>?</span><span class=p>){</span>
+        <span class=n>task</span><span class=p>.</span><span class=n>isGroupTask</span> <span class=o>=</span> <span class=nb>true</span>
+        <span class=n>tasks</span><span class=p>.</span><span class=n>append</span><span class=p>(</span><span class=n>task</span><span class=p>)</span>
+        <span class=k>return</span> <span class=n>mediator</span><span class=p>.</span><span class=n>dispatchCommand</span><span class=p>(</span><span class=nb>self</span><span class=p>,</span> <span class=nl>task</span><span class=p>:</span> <span class=n>task</span><span class=p>)</span> <span class=kt>as</span><span class=o>!</span> <span class=p>(</span><span class=n>Task</span><span class=p>,</span> <span class=n>Any</span><span class=o>?</span><span class=p>)</span>
+    <span class=p>}</span>
+    <span class=k>func</span> <span class=n>sendTaskAndGetTaskWithQuotes</span><span class=p>(</span><span class=k>var</span> <span class=nl>task</span><span class=p>:</span> <span class=n>Task</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Task</span> <span class=p>{</span>
+        <span class=n>task</span><span class=p>.</span><span class=n>startBy</span> <span class=o>=</span> <span class=n>name</span>
+        <span class=n>task</span><span class=p>.</span><span class=n>status</span> <span class=o>=</span> <span class=n>TaskStatus</span><span class=p>.</span><span class=n>S1_Submited</span>
+        <span class=n>tasks</span><span class=p>.</span><span class=n>append</span><span class=p>(</span><span class=n>task</span><span class=p>)</span>
+        <span class=k>return</span> <span class=n>mediator</span><span class=p>.</span><span class=n>dispatchCommand</span><span class=p>(</span><span class=nb>self</span><span class=p>,</span> <span class=nl>task</span><span class=p>:</span> <span class=n>task</span><span class=p>)</span> <span class=kt>as</span><span class=o>!</span> <span class=n>Task</span>
+    <span class=p>}</span>
+
+    <span class=k>func</span> <span class=n>choseProAndGetFinalWork</span><span class=p>(</span><span class=k>var</span> <span class=nl>task</span><span class=p>:</span> <span class=n>Task</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=p>(</span><span class=nl>task</span><span class=p>:</span> <span class=n>Task</span><span class=p>,</span> <span class=nl>result</span><span class=p>:</span> <span class=n>Any</span><span class=o>?</span><span class=p>){</span>
+        <span class=n>task</span><span class=p>.</span><span class=n>status</span> <span class=o>=</span> <span class=n>TaskStatus</span><span class=p>.</span><span class=n>S4_ProChosen</span>
+        <span class=k>return</span> <span class=n>mediator</span><span class=p>.</span><span class=n>dispatchCommand</span><span class=p>(</span><span class=nb>self</span><span class=p>,</span> <span class=nl>task</span><span class=p>:</span> <span class=n>task</span><span class=p>)</span> <span class=kt>as</span><span class=o>!</span> <span class=p>(</span><span class=n>Task</span><span class=p>,</span> <span class=n>Any</span><span class=o>?</span><span class=p>)</span>
+    <span class=p>}</span>
+
+    <span class=c1>// function for customer: choose pro and confirm work. Mediator only sends task back if there is at least one quotation.</span>
+    <span class=k>func</span> <span class=n>choosePro</span><span class=p>(</span><span class=k>var</span> <span class=nl>task</span><span class=p>:</span> <span class=n>Task</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Task</span><span class=p>{</span>
+        <span class=c1>// assume customer is business, only randomly choose one quote</span>
+        <span class=k>let</span> <span class=n>index</span> <span class=o>=</span> <span class=n>arc4random_uniform</span><span class=p>(</span><span class=kt>UInt32</span><span class=p>(</span><span class=n>task</span><span class=p>.</span><span class=n>quotes</span><span class=p>.</span><span class=n>count</span><span class=p>))</span>
+        <span class=n>task</span><span class=p>.</span><span class=n>quotes</span> <span class=o>=</span> <span class=p>[</span><span class=n>task</span><span class=p>.</span><span class=n>quotes</span><span class=p>[</span><span class=n>Int</span><span class=p>(</span><span class=n>index</span><span class=p>)]]</span>
+        <span class=n>print</span><span class=p>(</span><span class=s>&quot;Choose the pro\(task.quotes[0])&quot;</span><span class=p>)</span>
+        <span class=n>task</span><span class=p>.</span><span class=n>status</span> <span class=o>=</span> <span class=n>TaskStatus</span><span class=p>.</span><span class=n>S4_ProChosen</span>
+        <span class=n>task</span><span class=p>.</span><span class=n>finishedBy</span> <span class=o>=</span> <span class=n>task</span><span class=p>.</span><span class=n>quotes</span><span class=p>[</span><span class=mi>0</span><span class=p>].</span><span class=n>name</span>
+        <span class=k>return</span> <span class=n>task</span>
+    <span class=p>}</span>
+
+    <span class=k>func</span> <span class=n>confirmWork</span><span class=p>(</span><span class=k>var</span> <span class=nl>task</span><span class=p>:</span> <span class=n>Task</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Task</span><span class=p>{</span>
+        <span class=k>let</span> <span class=n>index</span> <span class=o>=</span> <span class=n>tasks</span><span class=p>.</span><span class=n>indexOf</span> <span class=p>{</span><span class=err>$</span><span class=mf>0.</span><span class=kt>id</span> <span class=o>==</span> <span class=n>task</span><span class=p>.</span><span class=kt>id</span><span class=p>}</span>
+        <span class=n>task</span><span class=p>.</span><span class=n>status</span> <span class=o>=</span> <span class=p>.</span><span class=n>S7_CustomConfirmWork</span>
+        <span class=k>if</span> <span class=n>index</span> <span class=o>!=</span> <span class=nb>nil</span> <span class=p>{</span>
+            <span class=n>tasks</span><span class=p>[</span><span class=n>index</span><span class=o>!</span><span class=p>]</span> <span class=o>=</span> <span class=n>task</span>
+        <span class=p>}</span>
+        <span class=k>return</span> <span class=n>task</span>
+    <span class=p>}</span>
+
+    <span class=c1>// function for pro: submit quotes and finish task</span>
+    <span class=k>func</span> <span class=n>submitQuote</span><span class=p>(</span><span class=nl>task</span><span class=p>:</span> <span class=n>Task</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=n>String</span><span class=p>,</span> <span class=nl>price</span><span class=p>:</span> <span class=n>Int</span><span class=p>,</span> <span class=nl>message</span><span class=p>:</span> <span class=n>String</span><span class=p>)</span> <span class=p>{</span>
+        <span class=k>let</span> <span class=n>quote</span> <span class=o>=</span> <span class=n>task</span><span class=p>.</span><span class=n>price</span> <span class=o>*</span> <span class=p>(</span><span class=n>Int</span><span class=p>(</span><span class=n>arc4random_uniform</span><span class=p>(</span><span class=mi>3</span><span class=p>))</span> <span class=o>+</span> <span class=mi>1</span><span class=p>)</span>
+        <span class=k>let</span> <span class=n>message</span> <span class=o>=</span> <span class=s>&quot;Some random message for the customer: choose me...&quot;</span>
+        <span class=k>return</span> <span class=p>(</span><span class=n>name</span><span class=p>,</span> <span class=n>quote</span><span class=p>,</span> <span class=n>message</span><span class=p>)</span>
+    <span class=p>}</span>
+
+    <span class=c1>// let&#39;s assume a pro always finishes the job and give back the result now. Deal with bad pros later</span>
+    <span class=k>func</span> <span class=n>finishTask</span><span class=p>(</span><span class=k>var</span> <span class=nl>task</span><span class=p>:</span> <span class=n>Task</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=p>(</span><span class=nl>task</span><span class=p>:</span><span class=n>Task</span><span class=p>,</span> <span class=nl>result</span><span class=p>:</span> <span class=n>Any</span><span class=o>?</span><span class=p>){</span>
+        <span class=k>let</span> <span class=n>result</span> <span class=o>=</span> <span class=n>task</span><span class=p>.</span><span class=n>execute</span><span class=p>(</span><span class=nb>self</span><span class=p>)</span>
+        <span class=n>task</span><span class=p>.</span><span class=n>finishedBy</span> <span class=o>=</span> <span class=n>name</span>
+        <span class=n>task</span><span class=p>.</span><span class=n>status</span> <span class=o>=</span> <span class=n>TaskStatus</span><span class=p>.</span><span class=n>S6_ProFinished</span>
+        <span class=nb>self</span><span class=p>.</span><span class=n>works</span><span class=p>.</span><span class=n>append</span><span class=p>(</span><span class=n>task</span><span class=p>)</span>
+        <span class=k>return</span> <span class=p>(</span><span class=n>task</span><span class=p>,</span> <span class=n>result</span><span class=p>)</span>
+    <span class=p>}</span>
+
+<span class=p>}</span>
+
+<span class=c1>// Testing. Create some tasks and users</span>
+<span class=k>let</span> <span class=n>partyTask</span> <span class=o>=</span> <span class=n>Task</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=s>&quot;Host a Party of the Century&quot;</span><span class=p>,</span> <span class=nl>price</span><span class=p>:</span> <span class=mi>2000000</span><span class=p>,</span> <span class=nl>proType</span><span class=p>:</span> <span class=p>.</span><span class=n>PartyPlanner</span><span class=p>)</span> <span class=p>{</span> <span class=n>peer</span> <span class=k>in</span>
+    <span class=n>print</span><span class=p>(</span><span class=s>&quot;\(peer.name) is doing the job&quot;</span><span class=p>)</span>
+    <span class=n>print</span><span class=p>(</span><span class=s>&quot;Inviting people...&quot;</span><span class=p>)</span>
+    <span class=k>return</span> <span class=s>&quot;Final work: the greatest party ever...&quot;</span>
+<span class=p>}</span>
+<span class=k>let</span> <span class=n>partyTask1</span> <span class=o>=</span> <span class=n>Task</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=s>&quot;Host a Party of the Next Century&quot;</span><span class=p>,</span> <span class=nl>price</span><span class=p>:</span> <span class=mi>2220000</span><span class=p>,</span> <span class=nl>proType</span><span class=p>:</span> <span class=p>.</span><span class=n>PartyPlanner</span><span class=p>)</span> <span class=p>{</span> <span class=n>peer</span> <span class=k>in</span>
+    <span class=n>print</span><span class=p>(</span><span class=s>&quot;\(peer.name) is doing the job&quot;</span><span class=p>)</span>
+    <span class=n>print</span><span class=p>(</span><span class=s>&quot;Inviting people...&quot;</span><span class=p>)</span>
+    <span class=k>return</span> <span class=s>&quot;Final work: the greatest party ever....&quot;</span>
+<span class=p>}</span>
+<span class=k>let</span> <span class=n>musicTask</span> <span class=o>=</span> <span class=n>Task</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=s>&quot;Write A Mountain-Moving Song&quot;</span><span class=p>,</span> <span class=nl>price</span><span class=p>:</span> <span class=mi>80000000</span><span class=p>,</span> <span class=nl>proType</span><span class=p>:</span> <span class=p>.</span><span class=n>Musician</span><span class=p>)</span> <span class=p>{</span> <span class=n>peer</span> <span class=k>in</span>
+    <span class=n>print</span><span class=p>(</span><span class=s>&quot;\(peer.name) is doing the job...&quot;</span><span class=p>)</span>
+    <span class=n>print</span><span class=p>(</span><span class=s>&quot;Composing ♭♮♯♯♮♭♭♫♬♩♪...&quot;</span><span class=p>)</span>
+    <span class=k>return</span> <span class=s>&quot;Final work: a beautiful song&quot;</span>
+<span class=p>}</span>
+<span class=k>let</span> <span class=n>paintTask</span> <span class=o>=</span> <span class=n>Task</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=s>&quot;The Finest Paint Collection&quot;</span><span class=p>,</span> <span class=nl>price</span><span class=p>:</span> <span class=mi>2010000</span><span class=p>,</span> <span class=nl>proType</span><span class=p>:</span> <span class=p>.</span><span class=n>Artist</span><span class=p>,</span> <span class=nl>isGroupTask</span><span class=p>:</span> <span class=nb>true</span><span class=p>)</span> <span class=p>{</span> <span class=n>peer</span> <span class=k>in</span>
+    <span class=n>print</span><span class=p>(</span><span class=s>&quot;\(peer.name) is doing the job...&quot;</span><span class=p>)</span>
+    <span class=n>print</span><span class=p>(</span><span class=s>&quot;Painting...&quot;</span><span class=p>)</span>
+    <span class=k>return</span> <span class=s>&quot;Final work: Paint Work&quot;</span>
+<span class=p>}</span>
+
+<span class=k>let</span> <span class=n>mediator</span> <span class=o>=</span> <span class=n>CommandMediator</span><span class=p>()</span>
+<span class=k>let</span> <span class=n>u1</span> <span class=o>=</span> <span class=n>User</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=s>&quot;The Queue &quot;</span><span class=p>,</span> <span class=nl>mediator</span><span class=p>:</span> <span class=n>mediator</span><span class=p>)</span>
+<span class=k>var</span> <span class=n>u2</span> <span class=o>=</span> <span class=n>User</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=s>&quot;Michelangelo&quot;</span><span class=p>,</span> <span class=nl>mediator</span><span class=p>:</span> <span class=n>mediator</span><span class=p>,</span> <span class=nl>proType</span><span class=p>:</span> <span class=p>.</span><span class=n>Artist</span><span class=p>)</span>
+<span class=k>let</span> <span class=n>u3</span> <span class=o>=</span> <span class=n>User</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=s>&quot;Johannes&quot;</span><span class=p>,</span> <span class=nl>mediator</span><span class=p>:</span> <span class=n>mediator</span><span class=p>,</span> <span class=nl>proType</span><span class=p>:</span> <span class=p>.</span><span class=n>Musician</span><span class=p>)</span>
+<span class=k>let</span> <span class=n>u6</span> <span class=o>=</span> <span class=n>User</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=s>&quot;Ludwig&quot;</span><span class=p>,</span> <span class=nl>mediator</span><span class=p>:</span> <span class=n>mediator</span><span class=p>,</span> <span class=nl>proType</span><span class=p>:</span> <span class=p>.</span><span class=n>Musician</span><span class=p>)</span>
+<span class=k>let</span> <span class=n>u4</span> <span class=o>=</span> <span class=n>User</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=s>&quot;Eugène&quot;</span><span class=p>,</span> <span class=nl>mediator</span><span class=p>:</span> <span class=n>mediator</span><span class=p>,</span> <span class=nl>proType</span><span class=p>:</span> <span class=p>.</span><span class=n>Artist</span><span class=p>)</span>
+<span class=k>let</span> <span class=n>u5</span> <span class=o>=</span> <span class=n>User</span><span class=p>(</span><span class=nl>name</span><span class=p>:</span> <span class=s>&quot;Josh&quot;</span><span class=p>,</span> <span class=nl>mediator</span><span class=p>:</span> <span class=n>mediator</span><span class=p>,</span> <span class=nl>proType</span><span class=p>:</span> <span class=p>.</span><span class=n>PartyPlanner</span><span class=p>)</span>
+<span class=k>let</span> <span class=n>tasks</span> <span class=o>=</span> <span class=p>[</span><span class=n>partyTask</span><span class=p>,</span> <span class=n>paintTask</span><span class=p>,</span> <span class=n>musicTask</span><span class=p>,</span> <span class=n>partyTask1</span><span class=p>]</span>
+<span class=k>for</span> <span class=n>task</span> <span class=k>in</span> <span class=n>tasks</span> <span class=p>{</span>
+    <span class=k>if</span> <span class=n>task</span><span class=p>.</span><span class=n>isGroupTask</span> <span class=p>{</span>
+        <span class=n>print</span><span class=p>(</span><span class=s>&quot;</span><span class=se>\n</span><span class=s>Sending a task called [\(task.name)]  that require a GROUP to finish....&quot;</span><span class=p>)</span>
+        <span class=k>let</span> <span class=n>groupResults</span> <span class=o>=</span> <span class=n>u1</span><span class=p>.</span><span class=n>sendTaskToGroupAndGetFinalWork</span><span class=p>(</span><span class=n>task</span><span class=p>)</span>
+        <span class=n>print</span><span class=p>(</span><span class=s>&quot;The final work: \(groupResults.1)&quot;</span><span class=p>)</span>
+    <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+        <span class=n>print</span><span class=p>(</span><span class=s>&quot;</span><span class=se>\n</span><span class=s>Creating a task called [\(task.name)] that require a single pro to finish ...&quot;</span><span class=p>)</span>
+        <span class=k>let</span> <span class=n>taskWithQuotes</span> <span class=o>=</span> <span class=n>u1</span><span class=p>.</span><span class=n>sendTaskAndGetTaskWithQuotes</span><span class=p>(</span><span class=n>task</span><span class=p>)</span>
+        <span class=n>print</span><span class=p>(</span><span class=n>taskWithQuotes</span><span class=p>)</span>
+        <span class=n>print</span><span class=p>(</span><span class=s>&quot;Getting finished work and task....&quot;</span><span class=p>)</span>
+        <span class=k>let</span> <span class=n>taskFinishedByProAndWork</span> <span class=o>=</span> <span class=n>u1</span><span class=p>.</span><span class=n>choseProAndGetFinalWork</span><span class=p>(</span><span class=n>taskWithQuotes</span><span class=p>)</span>
+        <span class=n>print</span><span class=p>(</span><span class=s>&quot;The final work: \(taskFinishedByProAndWork.1)&quot;</span><span class=p>)</span>
+        <span class=n>u1</span><span class=p>.</span><span class=n>confirmWork</span><span class=p>((</span><span class=n>taskFinishedByProAndWork</span><span class=mf>.0</span><span class=p>))</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+
+
+<span class=k>let</span> <span class=n>users</span> <span class=o>=</span> <span class=p>[</span><span class=n>u1</span><span class=p>,</span> <span class=n>u2</span><span class=p>,</span> <span class=n>u3</span><span class=p>,</span> <span class=n>u4</span><span class=p>,</span> <span class=n>u5</span><span class=p>,</span> <span class=n>u6</span><span class=p>]</span>
+<span class=n>users</span><span class=p>.</span><span class=n>map</span><span class=p>{</span><span class=n>print</span><span class=p>(</span><span class=s>&quot;\($0.description)&quot;</span><span class=p>)}</span></code></pre></figure><p><a href=/assets/images/wp-content/uploads/2015/07/mediator.png><img class="aligncenter size-full wp-image-1077" src=/assets/images/wp-content/uploads/2015/07/mediator.png alt=mediator width=746 height=970></a></p><p>Upon seeing the tasks, I can&#8217;t help wonder: don&#8217;t we all serve the pleasure of the queue?</p></div></div></div></div><div class=card><div class=page-nav><div><a class=prev href=/2015/07/17/a-design-pattern-story-in-swift-chapter-19-flyweight/ ><i class="fa fa-angle-left"></i></a> <a class=prev href=/2015/07/17/a-design-pattern-story-in-swift-chapter-19-flyweight/ >A Design Pattern Story in Swift – Chapter 19: Flyweight</a></div><div><a class=next href=/2015/07/18/a-design-pattern-story-in-swift-chapter-21-interpretor/ >A Design Pattern Story in Swift – Chapter 21: Interpretor </a><a class=prev href=/2015/07/18/a-design-pattern-story-in-swift-chapter-21-interpretor/ ><i class="fa fa-angle-right"></i></a></div></div></div><div class="related card"><h2>Related Posts</h2><ul class=related-posts><li><h4><a href=/general/2015/11/11/singles-day/ >Singles Day <small>11 Nov 2015</small></a></h4></li><li><h4><a href=/jekyll/2015/09/27/relocating-my-blog-from-wordpress-to-Jekyll/ >Relocating My Blog from Wordpress to Jekyll <small>27 Sep 2015</small></a></h4></li><li><h4><a href=/2015/07/18/a-design-pattern-story-in-swift-chapter-21-interpretor/ >A Design Pattern Story in Swift – Chapter 21: Interpretor <small>18 Jul 2015</small></a></h4></li></ul></div><div class=card><div id=disqus_thread></div><script type=text/javascript>var disqus_shortname = 'audreyli';
+    
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript rel=nofollow>comments powered by Disqus.</a></noscript></div></div></div></main><footer class=row><div class="col-md-8 col-md-offset-2 text-center"><a href=http://audreyli.me>&copy; Copyright 2015 &nbsp; &nbsp; AudreyLi.me &nbsp; &nbsp;</a> <a href=/archives>Archives &nbsp; &nbsp; </a><a href=https://github.com/vidaaudrey title="Audrey's Github"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-github fa-stack-1x fa-inverse"></i> </span></a><a href=https://www.linkedin.com/in/audreyauli title="Audrey's Google Plus"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i> </span></a><a href=/feed.xml title="RSS Feed"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x"></i> <i class="fa fa-rss fa-stack-1x fa-inverse"></i></span></a></div></footer><script src=https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js></script><script src=https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/js/bootstrap.js></script><script src=/assets/javascript/index.js></script></div><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-68084914-1', 'auto');
+    ga('send', 'pageview');</script></body></html>
