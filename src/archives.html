@@ -1,0 +1,20 @@
+---
+layout: default
+title: Archieves
+image:
+    feature: '/assets/images/bg1.jpeg'
+    credit: 
+    creditlink: 
+---
+
+<div class="card archives">
+  <ul>
+    {% for post in site.posts %}
+      <li><a href={{post.url}}>{{post.title}} 
+          <i class="pull-xs-right"><time datetime={{post.date}} class="text-muted">{{post.date | date: "%-d %B %Y"}}</time></i>
+          </a>
+      </li>
+
+    {% endfor %}
+  </ul>
+</div>

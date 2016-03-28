@@ -10,9 +10,7 @@ categories: Jekyll
 ###
 -----
 In this post, I am going to use different markup tags and format to show what styles are built in this new [Jekyll](http://jekyllrb.com) blog. 
-
 My last blog entry was on July 18th, which was about 2 months ago. In the past 2 months, I've spent some time trying to learn some front-end development skills and had two client projects. Although I love iOS, web development comes more handy and useful in the day-to-day life. And I feel fortunate that I'll be attending Makersquare in early November for an intensive 3 months' training program. 
-
 <!--more-->
 
 ### Background 

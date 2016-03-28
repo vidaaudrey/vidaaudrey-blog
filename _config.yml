@@ -1,7 +1,7 @@
 # Title, decription, tagline and URL for your site
 # Can be used in your theme by calling 'site.title' and so on
 name: vidaaudrey-blog
-description: Audrey Li&#39;s personal blog
+description: Audrey Li's personal blog
 url: http://audreyli.me
 
 # Used so Jekyll outputs the site correctly so Gulp can do what it wants
@@ -26,7 +26,7 @@ show_drafts: true
 # Disables the more accurate related posts for faster generating of the site
 lsi: false
 # Only make the last 10 posts so generating isn't slow
-limit_posts: 10
+limit_posts: 100
 
 # Permalink structure and pagination options
 permalink: pretty
@@ -39,7 +39,7 @@ markdown: redcarpet
 redcarpet:
   extensions: ['no_intra_emphasis', 'tables', 'fenced_code_blocks', 'autolink', 'smart',
               'strikethrough', 'superscript', 'underline', 'highlight', 'footnotes']
-highlighter: true
+highlighter: pygments
 
 # Extending Jekyll
 gems:

@@ -1,0 +1,57 @@
+
+
+<!-- jumbotron for pages -->
+{% if page.id %}
+<!-- jumbotron for post page, with feature image -->
+  {% if (page.type == 'page-post') or (page.type == false) %}
+      <div class="jumbotron jumbotron-post" style="background-image: url('{{page.image.feature}}')">
+         {% include post-header-title.html %}
+        
+      </div>
+
+  <!-- jumbotron for post page, without feature image -->
+  {% elsif page.type == 'page-post-long-feature' %}
+     <div class="jumbotron jumbotron-post-long-feature" style="background-image: url('{{page.image.feature}}')">
+         {% include post-header-title.html %}
+      </div>
+
+  <!-- jumbotron for post page, without feature image -->
+  {% elsif page.type == 'page-post-plain' %}
+      <div class="jumbotron jumbotron-post-plain">
+         {% include post-header-title.html %}
+      </div>
+  {% endif %}
+
+
+{% else %}
+<!-- jumbotron for pages -->
+<!-- jumbotron for home page -->
+  {% if (page.type == 'page-home') or (page.type  == false) %} 
+      <div class="jumbotron text-center jumbotron-home">
+        <div class="container">
+          <h1>{{ page.title }}</h1>
+          <p>{{ page.subtitle }}</p>
+        </div>
+      </div>
+
+  <!-- jumbotron for home page -->
+  {% elsif page.type == 'page' %} 
+      <div class="jumbotron text-center jumbotron-page" style="background-image: url('{{page.image.feature}}')">
+        <div class="container">
+          <h1>{{ page.title }}</h1>
+          <p>{{ page.subtitle }}</p>
+        </div>
+      </div>
+
+  <!-- jumbotron for plain page, no feature image -->
+  {% elsif page.type == 'page-plain' %}
+      <div class="jumbotron text-center jumbotron-page-plain">
+        <div class="container">
+          <h1>{{ page.title }}</h1>
+          <p>{{ page.subtitle }}</p>
+        </div>
+      </div>
+
+  {% endif %}
+{% endif %}
+

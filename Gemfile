@@ -3,6 +3,7 @@ source "http://rubygems.org"
 gem 'jekyll'
 gem 'redcarpet'
 gem 'classifier-reborn'
+gem 'pygments.rb'
 
 # jekyll plugins
 gem 'jekyll-archives'

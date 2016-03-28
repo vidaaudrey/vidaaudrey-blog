@@ -1,21 +1,44 @@
 ---
 layout: default
-regenerate: true
+title: Audrey Li
+subtitle: "Learning Swift, Javascript, and more..."
+image:
+    feature: '/assets/images/bg-default.jpeg'
+    credit: 
+    creditlink: 
 ---
-<div class="home">
-  <h1 class="page-heading">Posts</h1>
 
-  <ul class="post-list">
-    {% for post in site.posts %}
-      <li>
-        <span class="post-meta">{{ post.date | date: "%b %-d, %Y" }}</span>
+<div class="posts">
+  {% for post in paginator.posts %}
+  <div class="post card">
+    
+    <h2 class="post-title">
+      <a href="{{ post.url }}">
+        {{ post.title }}
+      </a>
+    </h2>
 
-        <h2>
-          <a class="post-link" href="{{ post.url }}">{{ post.title }}</a>
-        </h2>
-      </li>
-    {% endfor %}
-  </ul>
+    {% if post.image.feature %}
+    <div class="feature-thumb {% if post.type == 'page-post-long-feature' %}photo-long{% endif %}">
+      <a href="{{ post.url }}">
+        <img src="{{ post.image.feature}}" alt="Feature Image">
+      </a>
+    </div>
+    {% endif %}
 
-  <p class="rss-subscribe">subscribe <a href="{{ "feed.xml" }}">via RSS</a></p>
+    <div class="post-content">
+      {% if post.excerpt %}
+        {{ post.excerpt }}
+      {% else %}
+       {{ post.content | strip_html | truncatewords:5}}
+      {% endif %}
+    </div>
+    <span class="post-date">{{ post.date | date_to_string }}</span>
+    <a href="{{ post.url }}#disqus_thread"></a>
+    <a href="{{ post.url }}">Read more &raquo;</a>
+  </div>
+  {% endfor %}
 </div>
+ 
+{% include pagination.html %}
+

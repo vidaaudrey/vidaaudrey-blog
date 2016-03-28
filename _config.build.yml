@@ -5,7 +5,8 @@
 future: false
 show_drafts: false
 # Gives you more accurate related posts
-lsi: true
+# Audrey: disabled it as it take way too long to build the blog 
+lsi: false
 # Removes the upper limit for posts generated
 limit_posts: 0
 

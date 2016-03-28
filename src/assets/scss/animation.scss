@@ -1,0 +1,32 @@
+
+@keyframes logoDisappear {
+  0% {
+    width:90px;
+    height: 90px;
+
+  }
+  100% {
+    width: 50%;
+    height: 50%;
+  }
+}
+@keyframes logoAppear {
+  0% {
+    width: 50%;
+    height: 50%;   
+  }
+  100% {
+    width:90px;
+    height: 90px;
+  }
+}
+
+
+@keyframes pulse {
+  0% {
+    background-color: #001F3F;
+  }
+  100% {
+    background-color: #FF4136;
+  }
+}

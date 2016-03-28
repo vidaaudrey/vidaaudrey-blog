@@ -3,7 +3,7 @@
 
 # TEAM
 
-    Audrey Li -- <role> -- @vidaaudrey
+    Audrey Li -- Full Stack Software Engineer -- @vidaaudrey
 
 # THANKS
 

@@ -1,8 +1,13 @@
-/*
+/* 
 The main SCSS file for everything, yep
 */
 
+// @import "poole";
+// @import "lanyon";
+// @import "mixins"; 
+// @import "animation"; 
+// @import "base";
+// @import "layout";
+@import "syntax";
 @import "main";
-@import "base";
-@import "layout";
-@import "syntax-highlighting";
+// @import "syntax-highlighting";

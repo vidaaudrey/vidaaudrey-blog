@@ -1,0 +1,16 @@
+
+{% if page.gallery %} 
+  {% if page.gallery-title %}
+    <h2>{{page.gallery-title}}</h2>
+  {% endif %}
+  <div class="gallery">
+  {% for image in page.gallery %}
+    <div class="gallery-image col-{{image.col}}">
+      <a href="/assets/images/blog-images/20150928/{{image.name}}.jpeg" title="">
+        <img src="/assets/images/blog-images/20150928/{{image.name}}-thumb.jpeg" alt="my image" title="my image"/>
+      </a>
+      By <a href="{{image.credit}}">{{image.author}}</a>
+    </div>
+  {% endfor %}
+  </div>
+{% endif %}

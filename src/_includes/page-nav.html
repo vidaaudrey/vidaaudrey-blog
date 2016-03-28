@@ -1,0 +1,16 @@
+<div class="page-nav">
+    <div>
+        {% if page.previous.url %}
+         <a class="prev" href="{{page.previous.url}}"> <i class="fa fa-angle-left"></i></a> 
+          <a class="prev" href="{{page.previous.url}}"> {{page.previous.title}}</a>
+        {% endif %}
+    </div>
+    <div>
+        {% if page.next.url %}
+          <a class="next" href="{{page.next.url}}">{{page.next.title}} </a>
+         <a class="prev" href="{{page.next.url}}"> <i class="fa fa-angle-right"></i></a> 
+        {% endif %}
+    </div>
+</div>
+
+

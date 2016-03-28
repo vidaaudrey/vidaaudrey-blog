@@ -52,6 +52,10 @@ GEM
       jekyll (~> 3.0)
     octopress-hooks (2.6.1)
       jekyll (>= 2.0)
+    posix-spawn (0.3.11)
+    pygments.rb (0.6.3)
+      posix-spawn (~> 0.3.6)
+      yajl-ruby (~> 1.2.0)
     rb-fsevent (0.9.7)
     rb-inotify (0.9.7)
       ffi (>= 0.5.0)
@@ -63,6 +67,7 @@ GEM
       addressable (>= 2.3.5, < 2.5)
       faraday (~> 0.8, < 0.10)
     titlecase (0.1.1)
+    yajl-ruby (1.2.1)
 
 PLATFORMS
   ruby
@@ -76,6 +81,7 @@ DEPENDENCIES
   jekyll-paginate
   jekyll-sitemap
   octopress (~> 3.0)
+  pygments.rb
   redcarpet
 
 BUNDLED WITH

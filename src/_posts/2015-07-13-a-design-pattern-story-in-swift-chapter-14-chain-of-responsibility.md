@@ -24,15 +24,14 @@ image:
 >   <span> The chain of responsibility pattern is used to process varied requests, each of which may be dealt with by a different handler.</span>
 > </p>
 
-{% highlight swift %}enum GuestType {
+{% highlight swift %}
+enum GuestType {
     case VIP
     case God
     case Fairy
     case Unwelcomed
 }
-<h2>
-  <h2></h2>
-</h2>
+
 struct Guest {
     let guestType: GuestType
     let name: String
@@ -106,7 +105,9 @@ if let hostChain = Host.createChain() {
     for guest in guests {
         hostChain.host(guest)
     }
-}{% endhighlight %}
+}
+
+{% endhighlight %}
 
 [<img class="aligncenter size-full wp-image-1049" src="/assets/images/wp-content/uploads/2015/07/chain-of-responsbility.png" alt="chain-of-responsbility" width="326" height="169" />][1]
 
